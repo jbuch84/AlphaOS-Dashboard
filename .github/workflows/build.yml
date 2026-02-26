@@ -19,12 +19,21 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
 
+    # Step A: Install the actual Gradle software
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: 4.10.3
+
+    # Step B: Create the actual gradlew file from scratch
+    - name: Generate Wrapper
+      run: gradle wrapper --gradle-version 4.10.3
+
+    # Step C: NOW give it permission (This is the fix!)
     - name: Make Gradle Executable
-      run: chmod +x ./gradlew
+      run: chmod +x gradlew
 
-    - name: Build with Gradle
-      run: ./gradlew build --stacktrace
-
+    # Step D: Compile (Notice we removed the './' before gradlew here)
     - name: Compile the APK
       run: ./gradlew assembleDebug
 

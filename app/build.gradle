@@ -28,5 +28,5 @@ android.applicationVariants.all { variant ->
 dependencies {
     compile 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
     provided 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
-    compile 'com.nanohttpd:nanohttpd:2.1.1'
+    compile 'org.nanohttpd:nanohttpd:2.3.1'
 }

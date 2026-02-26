@@ -18,9 +18,6 @@ jobs:
       with:
         java-version: '8'
         distribution: 'temurin'
-    
-    - name: Generate Missing Gradle Wrapper
-      run: gradle wrapper --gradle-version 4.10.3
 
     - name: Make Gradle Executable
       run: chmod +x ./gradlew

@@ -15,8 +15,10 @@ android {
 }
 
 dependencies {
-    // We are pointing these specifically to the JitPack-compatible versions
+    // These must use the ":" instead of "-" for JitPack to find them
     implementation 'com.github.ma1co:OpenMemories-Framework:master-SNAPSHOT'
     compileOnly 'com.github.ma1co:OpenMemories-Framework:master-SNAPSHOT'
+    
+    // This must be the 2.3.1 version for the 'newFixedLengthResponse' command to work
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
 }

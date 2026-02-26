@@ -11,6 +11,6 @@ public class HttpServer extends NanoHTTPD {
 
     @Override
     public NanoHTTPD.Response serve(NanoHTTPD.IHTTPSession session) {
-        return new NanoHTTPD.Response(NanoHTTPD.Response.Status.OK, MIME_PLAINTEXT, "Hello World!");
+        return newFixedLengthResponse(Response.Status.OK, MIME_HTML, "Hello World!");
     }
 }

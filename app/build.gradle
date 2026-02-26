@@ -1,33 +1,15 @@
 apply plugin: 'com.android.application'
-
 android {
     compileSdkVersion 10
     buildToolsVersion "25.0.2"
-
     defaultConfig {
         applicationId "com.github.ma1co.pmcademo.app"
         minSdkVersion 10
         targetSdkVersion 10
         versionCode 1
         versionName "1.0"
-        
-        // This is the "Fail-Proof" renaming line
-        setProperty("archivesBaseName", "AlphaProManager")
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_6
-        targetCompatibility JavaVersion.VERSION_1_6
-    }
-
-    // This is the specific fix for the Line 24 "read-only" error
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "AlphaProManager.apk"
-        }
     }
 }
-
 dependencies {
     compile 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
     provided 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'

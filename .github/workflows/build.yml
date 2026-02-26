@@ -2,25 +2,23 @@ name: Build Sony Camera APK
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: ubuntu-22.04  # Faster runner pool
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
-
-    # This is the "Surgical Strike": It deletes the broken 2026 SDK files 
-    # so the compiler is forced to use the older ones we need.
-    - name: Purge Modern SDK Metadata
-      run: |
-        sudo rm -rf $ANDROID_SDK_ROOT/platforms/android-35
-        sudo rm -rf $ANDROID_SDK_ROOT/platforms/android-36
-
+    
     - name: Set up Java 8
       uses: actions/setup-java@v3
       with:
         java-version: '8'
         distribution: 'temurin'
 
+    # This is the "Total Isolation" move: 
+    # We clear the server's pre-installed SDK path so it doesn't find the broken "34x" files.
+    - name: Clear Poisoned SDK Path
+      run: echo "ANDROID_HOME=" >> $GITHUB_ENV
+
     - name: Setup Gradle 4.10.3
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: 4.10.3
 
@@ -28,7 +26,7 @@ jobs:
       run: |
         gradle wrapper --gradle-version 4.10.3
         chmod +x gradlew
-        ./gradlew clean assembleDebug --stacktrace
+        ./gradlew assembleDebug --stacktrace
 
     - name: Upload Result
       uses: actions/upload-artifact@v4

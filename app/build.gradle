@@ -14,7 +14,8 @@ android {
 }
 
 dependencies {
-    implementation 'com.github.ma1co:OpenMemories-Framework:0.4.0'
-    compileOnly 'com.github.ma1co:OpenMemories-Framework:0.4.0'
+    // Corrected JitPack coordinates with the proper module names
+    implementation 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
+    compileOnly 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
 }

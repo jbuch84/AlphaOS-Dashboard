@@ -12,10 +12,12 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
 
-    # This is the "Total Isolation" move: 
-    # We clear the server's pre-installed SDK path so it doesn't find the broken "34x" files.
-    - name: Clear Poisoned SDK Path
-      run: echo "ANDROID_HOME=" >> $GITHUB_ENV
+    # This is the correct purge. It targets the 30+ SDKs that have the broken XML,
+    # but leaves the Android directory intact so the compiler can still work.
+    - name: Purge Modern SDKs
+      run: |
+        sudo rm -rf $ANDROID_HOME/platforms/android-3*
+        sudo rm -rf $ANDROID_HOME/build-tools/3*
 
     - name: Setup Gradle 4.10.3
       uses: gradle/actions/setup-gradle@v3

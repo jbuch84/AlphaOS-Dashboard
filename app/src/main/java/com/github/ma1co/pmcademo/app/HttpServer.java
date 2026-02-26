@@ -20,11 +20,15 @@ import java.util.List;
 import java.util.Map;
 
 public class HttpServer extends NanoHTTPD {
+    // Exposing the PORT variable so WifiActivity.java doesn't crash
+    public static final int PORT = 8080; 
+    
     private Context context;
     private File dcimDir;
 
+    // The Context is required so we can read your index.html from the assets folder
     public HttpServer(Context context) {
-        super(8080);
+        super(PORT);
         this.context = context;
         this.dcimDir = new File(Environment.getExternalStorageDirectory(), "DCIM");
     }
@@ -40,17 +44,16 @@ public class HttpServer extends NanoHTTPD {
                 return Response.newChunkedResponse(Status.OK, "text/html", is);
             }
 
-            // 2. Hardware Telemetry API (Calculates SD Card Free Space)
+            // 2. Hardware Telemetry API
             if (uri.equals("/api/system")) {
                 StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
-                // Using legacy block methods to maintain compatibility with the a5100's older Android OS
                 long bytesAvailable = (long)stat.getBlockSize() * (long)stat.getAvailableBlocks();
                 double gbAvailable = bytesAvailable / (1024.0 * 1024.0 * 1024.0);
                 String json = String.format("{\"storage_gb\": \"%.1f\"}", gbAvailable);
                 return Response.newFixedLengthResponse(Status.OK, "application/json", json);
             }
 
-            // 3. Paginated File API (Prevents the camera from crashing on massive folders)
+            // 3. Paginated File API
             if (uri.startsWith("/api/files")) {
                 Map<String, List<String>> params = session.getParameters();
                 int offset = params.containsKey("offset") ? Integer.parseInt(params.get("offset").get(0)) : 0;
@@ -75,7 +78,7 @@ public class HttpServer extends NanoHTTPD {
                 return Response.newFixedLengthResponse(Status.OK, "application/json", json.toString());
             }
 
-            // 4. Instant EXIF Thumbnails (Strips out the 15KB preview instead of sending a 10MB file)
+            // 4. Instant EXIF Thumbnails
             if (uri.startsWith("/thumb/")) {
                 String fileName = uri.substring(7);
                 File file = findFile(dcimDir, fileName);
@@ -87,13 +90,14 @@ public class HttpServer extends NanoHTTPD {
                             return Response.newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(imageData), imageData.length);
                         }
                     } catch (Exception e) {
-                        // If it's a video or missing EXIF, drop down to the 404 so the HTML handles the icon
+                        // Drop down to 404 handling
                     }
                 }
-                return Response.newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "No thumbnail found");
+                // Updated MIME_PLAINTEXT syntax for NanoHTTPD 2.3.1
+                return Response.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "No thumbnail found");
             }
 
-            // 5. Full Resolution Image/Video Delivery
+            // 5. Full Resolution Delivery
             if (uri.startsWith("/full/")) {
                 String fileName = uri.substring(6);
                 File file = findFile(dcimDir, fileName);
@@ -105,13 +109,12 @@ public class HttpServer extends NanoHTTPD {
             }
 
         } catch (Exception e) {
-            return Response.newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Server Error: " + e.getMessage());
+            return Response.newFixedLengthResponse(Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, "Server Error: " + e.getMessage());
         }
 
-        return Response.newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "404 Not Found");
+        return Response.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "404 Not Found");
     }
 
-    // Deep scans the DCIM folder to find all JPGs and MP4s, skipping Sony database files
     private List<File> getMediaFiles(File dir) {
         List<File> result = new ArrayList<File>();
         File[] files = dir.listFiles();
@@ -127,7 +130,6 @@ public class HttpServer extends NanoHTTPD {
                 }
             }
         }
-        // Sort newest photos to the top
         Collections.sort(result, new Comparator<File>() {
             public int compare(File f1, File f2) {
                 return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
@@ -136,7 +138,6 @@ public class HttpServer extends NanoHTTPD {
         return result;
     }
 
-    // Locates a requested file by name, searching subdirectories
     private File findFile(File dir, String fileName) {
         File[] files = dir.listFiles();
         if (files != null) {

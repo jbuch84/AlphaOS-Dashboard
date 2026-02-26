@@ -1,9 +1,7 @@
 apply plugin: 'com.android.application'
-
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
-
     defaultConfig {
         applicationId "com.github.ma1co.pmcademo.app"
         minSdkVersion 10
@@ -12,9 +10,8 @@ android {
         versionName "1.0"
     }
 }
-
 dependencies {
-    implementation 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
-    compileOnly 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
-    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    compile 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
+    provided 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
+    compile 'org.nanohttpd:nanohttpd:2.3.1'
 }

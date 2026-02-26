@@ -8,22 +8,22 @@ android {
         applicationId "com.github.ma1co.pmcademo.app"
         minSdkVersion 10
         targetSdkVersion 10
-        versionCode "git -C ${projectDir} rev-list --first-parent --count HEAD".execute().text.trim().toInteger()
-        versionName "git -C ${projectDir} describe --always --tags --dirty".execute().text.trim().replaceAll("^v", "")
+        versionCode 1
+        versionName "1.0"
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_6
         targetCompatibility JavaVersion.VERSION_1_6
     }
-}
 
-android.applicationVariants.all { variant ->
-    variant.outputs.all {
-        outputFileName = "AlphaProManager-${variant.versionName}.apk"
+    // This is the specific fix for the Line 24 "read-only" error
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "AlphaProManager.apk"
+        }
     }
 }
-
 
 dependencies {
     compile 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'

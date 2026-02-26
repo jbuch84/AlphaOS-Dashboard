@@ -4,10 +4,6 @@ import android.content.Context;
 import android.media.ExifInterface;
 import android.os.Environment;
 import android.os.StatFs;
-import org.nanohttpd.protocols.http.IHTTPSession;
-import org.nanohttpd.protocols.http.NanoHTTPD;
-import org.nanohttpd.protocols.http.response.Response;
-import org.nanohttpd.protocols.http.response.Status;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -19,14 +15,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import fi.iki.elonen.NanoHTTPD;
+import fi.iki.elonen.NanoHTTPD.Response;
+import fi.iki.elonen.NanoHTTPD.Response.Status;
+
 public class HttpServer extends NanoHTTPD {
-    // Exposing the PORT variable so WifiActivity.java doesn't crash
-    public static final int PORT = 8080; 
-    
+    public static final int PORT = 8080;
     private Context context;
     private File dcimDir;
 
-    // The Context is required so we can read your index.html from the assets folder
     public HttpServer(Context context) {
         super(PORT);
         this.context = context;
@@ -38,22 +35,22 @@ public class HttpServer extends NanoHTTPD {
         String uri = session.getUri();
 
         try {
-            // 1. Serve the UI Dashboard
+            // Serve the Alpha OS Dashboard
             if (uri.equals("/")) {
                 InputStream is = context.getAssets().open("index.html");
-                return Response.newChunkedResponse(Status.OK, "text/html", is);
+                return newChunkedResponse(Status.OK, "text/html", is);
             }
 
-            // 2. Hardware Telemetry API
+            // Hardware Telemetry
             if (uri.equals("/api/system")) {
                 StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
                 long bytesAvailable = (long)stat.getBlockSize() * (long)stat.getAvailableBlocks();
                 double gbAvailable = bytesAvailable / (1024.0 * 1024.0 * 1024.0);
                 String json = String.format("{\"storage_gb\": \"%.1f\"}", gbAvailable);
-                return Response.newFixedLengthResponse(Status.OK, "application/json", json);
+                return newFixedLengthResponse(Status.OK, "application/json", json);
             }
 
-            // 3. Paginated File API
+            // Paginated files + Date metadata
             if (uri.startsWith("/api/files")) {
                 Map<String, List<String>> params = session.getParameters();
                 int offset = params.containsKey("offset") ? Integer.parseInt(params.get("offset").get(0)) : 0;
@@ -75,10 +72,10 @@ public class HttpServer extends NanoHTTPD {
                     if (i < pageFiles.size() - 1) json.append(",");
                 }
                 json.append("]}");
-                return Response.newFixedLengthResponse(Status.OK, "application/json", json.toString());
+                return newFixedLengthResponse(Status.OK, "application/json", json.toString());
             }
 
-            // 4. Instant EXIF Thumbnails
+            // Instant EXIF Thumbnails
             if (uri.startsWith("/thumb/")) {
                 String fileName = uri.substring(7);
                 File file = findFile(dcimDir, fileName);
@@ -87,32 +84,29 @@ public class HttpServer extends NanoHTTPD {
                         ExifInterface exif = new ExifInterface(file.getAbsolutePath());
                         byte[] imageData = exif.getThumbnail();
                         if (imageData != null) {
-                            return Response.newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(imageData), imageData.length);
+                            return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(imageData), imageData.length);
                         }
-                    } catch (Exception e) {
-                        // Drop down to 404 handling
-                    }
+                    } catch (Exception e) {}
                 }
-                // Updated MIME_PLAINTEXT syntax for NanoHTTPD 2.3.1
-                return Response.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "No thumbnail found");
+                return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "No thumbnail found");
             }
 
-            // 5. Full Resolution Delivery
+            // Full Resolution Media
             if (uri.startsWith("/full/")) {
                 String fileName = uri.substring(6);
                 File file = findFile(dcimDir, fileName);
                 if (file != null && file.exists()) {
                     FileInputStream fis = new FileInputStream(file);
                     String mime = fileName.toLowerCase().endsWith(".mp4") ? "video/mp4" : "image/jpeg";
-                    return Response.newFixedLengthResponse(Status.OK, mime, fis, file.length());
+                    return newFixedLengthResponse(Status.OK, mime, fis, file.length());
                 }
             }
 
         } catch (Exception e) {
-            return Response.newFixedLengthResponse(Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, "Server Error: " + e.getMessage());
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Server Error: " + e.getMessage());
         }
 
-        return Response.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "404 Not Found");
+        return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "404 Not Found");
     }
 
     private List<File> getMediaFiles(File dir) {

@@ -14,8 +14,8 @@ android {
 }
 
 dependencies {
-    // Corrected JitPack coordinates with the proper module names
     implementation 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
     compileOnly 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
-    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    // Downgraded to match PMCADemo's original working architecture
+    implementation 'org.nanohttpd:nanohttpd:2.2.0'
 }

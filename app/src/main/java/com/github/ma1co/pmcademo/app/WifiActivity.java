@@ -1,140 +1,104 @@
 package com.github.ma1co.pmcademo.app;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.text.format.Formatter;
 import android.widget.TextView;
 
 import java.io.IOException;
 
-public class WifiActivity extends BaseActivity {
-    private TextView textView;
-    private WebView webView;
+public class WifiActivity extends Activity {
     private WifiManager wifiManager;
-    private BroadcastReceiver wifiStateReceiver;
-    private BroadcastReceiver supplicantStateReceiver;
-    private BroadcastReceiver networkStateReceiver;
+    private ConnectivityManager connectivityManager;
+    private TextView textView;
     private HttpServer httpServer;
+    private BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_wifi);
+        textView = new TextView(this);
+        textView.setTextSize(20);
+        textView.setPadding(30, 30, 30, 30);
+        setContentView(textView);
 
-        textView = (TextView) findViewById(R.id.logView);
-        webView = (WebView) findViewById(R.id.webView);
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        textView.setText("Enabling Wi-Fi...");
 
-        wifiStateReceiver = new BroadcastReceiver() {
+        receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                wifiStateChanged(intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN));
+                updateStatus();
             }
         };
-
-        supplicantStateReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                networkStateChanged(WifiInfo.getDetailedStateOf((SupplicantState) intent.getParcelableExtra(WifiManager.EXTRA_NEW_STATE)));
-            }
-        };
-
-        networkStateReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                networkStateChanged(((NetworkInfo) intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO)).getDetailedState());
-            }
-        };
-
-        httpServer = new HttpServer(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(wifiStateReceiver, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
-        registerReceiver(supplicantStateReceiver, new IntentFilter(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION));
-        registerReceiver(networkStateReceiver, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
-        wifiManager.setWifiEnabled(true);
-        try {
-            httpServer.start();
-        } catch (IOException e) {}
-        setAutoPowerOffMode(false);
+        registerReceiver(receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        if (!wifiManager.isWifiEnabled()) {
+            wifiManager.setWifiEnabled(true);
+        }
+        updateStatus();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(wifiStateReceiver);
-        unregisterReceiver(supplicantStateReceiver);
-        unregisterReceiver(networkStateReceiver);
-        wifiManager.setWifiEnabled(false);
-        httpServer.stop();
-        setAutoPowerOffMode(true);
+        unregisterReceiver(receiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        webView.stopLoading();
-        webView.clearCache(true);
-        webView.clearHistory();
-        webView.destroy();
+        stopServer();
     }
 
-    protected void wifiStateChanged(int state) {
-        switch (state) {
-            case WifiManager.WIFI_STATE_ENABLING:
-                log("Enabling wifi");
-                break;
-            case WifiManager.WIFI_STATE_ENABLED:
-                log("Wifi enabled");
-                break;
+    private void updateStatus() {
+        NetworkInfo info = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (info != null && info.isConnected()) {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            int ip = wifiInfo.getIpAddress();
+            if (ip != 0) {
+                String ipAddress = String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff));
+                textView.setText("Connected to Home Network: " + wifiInfo.getSSID() + "\n\n" +
+                                 "Open your PC browser to:\n\n" +
+                                 "http://" + ipAddress + ":" + HttpServer.PORT);
+                startServer();
+            } else {
+                textView.setText("Obtaining IP address from router...");
+            }
+        } else {
+            textView.setText("Searching for home Wi-Fi...\n(Ensure camera has a saved network)");
+            stopServer();
         }
     }
 
-    protected void networkStateChanged(NetworkInfo.DetailedState state) {
-        String ssid = wifiManager.getConnectionInfo().getSSID();
-        switch (state) {
-            case CONNECTING:
-                if (ssid != null)
-                    log(ssid + ": Connecting");
-                break;
-            case AUTHENTICATING:
-                log(ssid + ": Authenticating");
-                break;
-            case OBTAINING_IPADDR:
-                log(ssid + ": Obtaining IP");
-                break;
-            case CONNECTED:
-                wifiConnected();
-                break;
-            case DISCONNECTED:
-                log("Disconnected");
-                break;
-            case FAILED:
-                log("Connection failed");
-                break;
+    private void startServer() {
+        if (httpServer == null) {
+            httpServer = new HttpServer(this);
+            try {
+                httpServer.start();
+            } catch (IOException e) {
+                textView.setText("Server error: " + e.getMessage());
+            }
         }
     }
 
-    protected void wifiConnected() {
-        WifiInfo info = wifiManager.getConnectionInfo();
-        String ssid = info.getSSID();
-        String ip = Formatter.formatIpAddress(info.getIpAddress());
-        log(ssid + ": Connected. Server URL: http://" + ip + ":" + HttpServer.PORT + "/");
-        webView.loadUrl("https://www.google.com/");
-    }
-
-    protected void log(String msg) {
-        textView.setText(msg);
+    private void stopServer() {
+        if (httpServer != null) {
+            httpServer.stop();
+            httpServer = null;
+        }
     }
 }

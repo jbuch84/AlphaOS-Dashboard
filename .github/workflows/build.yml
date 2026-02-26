@@ -12,18 +12,15 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
 
-    # This is the critical change: 
-    # It forces the server to use Gradle 4.10.3 instead of 9.3.1
+    # This is the "Force Version" move. It downloads 4.10.3 and ignores the server default.
     - name: Setup Gradle 4.10.3
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: 4.10.3
 
+    # Now we call 'gradle' directly (not ./gradlew) because the action provides the correct version.
     - name: Build APK
-      run: |
-        gradle wrapper --gradle-version 4.10.3
-        chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
+      run: gradle assembleDebug --stacktrace
 
     - name: Upload Result
       uses: actions/upload-artifact@v4

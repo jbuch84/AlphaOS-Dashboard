@@ -2,7 +2,7 @@ name: Build Sony Camera APK
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04  # Force older server to bypass modern XML errors
     steps:
     - uses: actions/checkout@v4
     
@@ -12,7 +12,6 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
 
-    # We use a specific legacy setup here to bypass the Gradle 9.3 default
     - name: Setup Gradle 4.10.3
       uses: gradle/gradle-build-action@v2
       with:

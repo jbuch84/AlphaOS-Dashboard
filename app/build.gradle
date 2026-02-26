@@ -10,14 +10,13 @@ android {
         targetSdkVersion 10
         versionCode 1
         versionName "1.0"
-        
-        // This is the simplest way to rename the output in this Gradle version.
         setProperty("archivesBaseName", "AlphaProManager")
     }
 }
 
 dependencies {
-    implementation 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
-    compileOnly 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
+    // We are pointing these specifically to the JitPack-compatible versions
+    implementation 'com.github.ma1co:OpenMemories-Framework:master-SNAPSHOT'
+    compileOnly 'com.github.ma1co:OpenMemories-Framework:master-SNAPSHOT'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
 }

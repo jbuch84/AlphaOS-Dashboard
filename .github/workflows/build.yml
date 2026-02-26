@@ -1,0 +1,32 @@
+name: Build Sony Camera APK
+
+on: 
+  workflow_dispatch:
+  push:
+    branches: [ "master", "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+
+    - name: Make Gradle Executable
+      run: chmod +x ./gradlew
+
+    - name: Compile the APK
+      run: ./gradlew assembleDebug
+
+    - name: Upload the Finished APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: AlphaProManager-App
+        path: app/build/outputs/apk/debug/*.apk

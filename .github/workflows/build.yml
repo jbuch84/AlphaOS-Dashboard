@@ -19,6 +19,9 @@ jobs:
         java-version: '8'
         distribution: 'temurin'
 
+    - name: Build with Gradle
+      run: ./gradlew build --stacktrace
+    
     - name: Generate Missing Gradle Wrapper
       run: gradle wrapper --gradle-version 4.10.3
 

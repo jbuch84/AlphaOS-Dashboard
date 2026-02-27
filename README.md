@@ -23,3 +23,8 @@ This app supports Sony cameras compatible with the PMCA framework (Android 2.3.7
 1. **Download the APK:** Go to the [Releases](../../releases) page of this repository and download the latest `AlphaOS-Dashboard-v1.X.apk` file.
 2. **Connect Your Camera:** Connect your Sony camera to your computer via USB. Ensure the USB connection mode is set to **MTP** or **Mass Storage**.
 3. **Install via PMCA-GUI
+
+## 💻 Screenshots
+<img width="827" height="775" alt="image" src="https://github.com/user-attachments/assets/859c9267-c0c8-4e08-afe2-932f8e893ed1" />
+<img width="828" height="777" alt="image" src="https://github.com/user-attachments/assets/40a8356e-2745-46ec-9714-7600c552298a" />
+

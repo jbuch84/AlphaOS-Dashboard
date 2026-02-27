@@ -1,4 +1,5 @@
 # Alpha OS Dashboard (Sony PMCA File Server)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/jbuchanan)
 
 A modern, lightning-fast web dashboard and file server for Sony Alpha cameras. 
 

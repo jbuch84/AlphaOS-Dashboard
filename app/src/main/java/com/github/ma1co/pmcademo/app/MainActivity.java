@@ -1,27 +1,33 @@
 package com.github.ma1co.pmcademo.app;
 
-import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class MainActivity extends ListActivity {
+// Extending BaseActivity guarantees the physical power button works
+public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Draws a safe, simple menu on the camera screen
-        String[] items = {"Start Alpha OS Dashboard (Wi-Fi)"};
-        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
-    }
-
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        if (position == 0) {
-            // Hands off the heavy network lifting to WifiActivity ONLY after you click
-            startActivity(new Intent(this, WifiActivity.class));
-        }
+        // Manually building the UI so we can keep BaseActivity protections
+        ListView listView = new ListView(this);
+        String[] items = {"Start Alpha OS Dashboard (Home Wi-Fi)"};
+        listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
+        
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    // This will no longer crash, because WifiActivity is in the Manifest
+                    startActivity(new Intent(MainActivity.this, WifiActivity.class));
+                }
+            }
+        });
+        
+        setContentView(listView);
     }
 }

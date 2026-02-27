@@ -32,8 +32,6 @@ public class WifiActivity extends Activity {
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        textView.setText("Enabling Wi-Fi...");
-
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -47,6 +45,7 @@ public class WifiActivity extends Activity {
         super.onResume();
         registerReceiver(receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         if (!wifiManager.isWifiEnabled()) {
+            textView.setText("Enabling Wi-Fi...");
             wifiManager.setWifiEnabled(true);
         }
         updateStatus();
@@ -71,21 +70,24 @@ public class WifiActivity extends Activity {
             int ip = wifiInfo.getIpAddress();
             if (ip != 0) {
                 String ipAddress = String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff));
-                textView.setText("Connected to Home Network: " + wifiInfo.getSSID() + "\n\n" +
+                textView.setText("Connected to: " + wifiInfo.getSSID() + "\n\n" +
                                  "Open your PC browser to:\n\n" +
                                  "http://" + ipAddress + ":" + HttpServer.PORT);
                 startServer();
             } else {
-                textView.setText("Obtaining IP address from router...");
+                textView.setText("Obtaining IP address from your router...");
             }
         } else {
-            textView.setText("Searching for home Wi-Fi...\n(Ensure camera has a saved network)");
+            textView.setText("Searching for home Wi-Fi...\n\n" +
+                             "If you haven't connected to your router yet, exit and go to:\n" +
+                             "MENU -> Wireless -> Access Point Settings");
             stopServer();
         }
     }
 
     private void startServer() {
         if (httpServer == null) {
+            // Passes 'this' context so the server can access index.html
             httpServer = new HttpServer(this);
             try {
                 httpServer.start();

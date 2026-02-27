@@ -1,110 +1,27 @@
 package com.github.ma1co.pmcademo.app;
 
-import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
+import android.app.ListActivity;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
-import java.io.IOException;
-
-public class MainActivity extends Activity {
-    private WifiManager wifiManager;
-    private ConnectivityManager connectivityManager;
-    private TextView textView;
-    private HttpServer httpServer;
-    private BroadcastReceiver receiver;
-
+public class MainActivity extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        textView = new TextView(this);
-        textView.setTextSize(20);
-        textView.setPadding(30, 30, 30, 30);
-        setContentView(textView);
-
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                updateStatus();
-            }
-        };
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver(receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         
-        // Turn on standard Home Wi-Fi mode (Infrastructure), NOT Hotspot
-        if (!wifiManager.isWifiEnabled()) {
-            textView.setText("Enabling Wi-Fi...");
-            wifiManager.setWifiEnabled(true);
-        }
-        updateStatus();
+        // Draws a safe, simple menu on the camera screen
+        String[] items = {"Start Alpha OS Dashboard (Wi-Fi)"};
+        setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(receiver);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopServer();
-    }
-
-    private void updateStatus() {
-        NetworkInfo info = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        if (info != null && info.isConnected()) {
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-            int ip = wifiInfo.getIpAddress();
-            if (ip != 0) {
-                // Successfully connected to Home Router
-                String ipAddress = String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff));
-                textView.setText("Connected to: " + wifiInfo.getSSID() + "\n\n" +
-                                 "Open your PC browser to:\n\n" +
-                                 "http://" + ipAddress + ":" + HttpServer.PORT);
-                startServer();
-            } else {
-                textView.setText("Obtaining IP address from your router...");
-            }
-        } else {
-            // Not connected. Wait for connection or prompt user to save a network.
-            textView.setText("Searching for home Wi-Fi...\n\n" +
-                             "If you haven't entered your Wi-Fi password yet, exit the app and go to:\n" +
-                             "MENU -> Wireless -> Access Point Settings");
-            stopServer();
-        }
-    }
-
-    private void startServer() {
-        if (httpServer == null) {
-            // Passes this Context so HttpServer can load index.html
-            httpServer = new HttpServer(this);
-            try {
-                httpServer.start();
-            } catch (IOException e) {
-                textView.setText("Server error: " + e.getMessage());
-            }
-        }
-    }
-
-    private void stopServer() {
-        if (httpServer != null) {
-            httpServer.stop();
-            httpServer = null;
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        if (position == 0) {
+            // Hands off the heavy network lifting to WifiActivity ONLY after you click
+            startActivity(new Intent(this, WifiActivity.class));
         }
     }
 }

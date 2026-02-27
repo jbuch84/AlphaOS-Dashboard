@@ -53,7 +53,6 @@ public class HttpServer extends NanoHTTPD {
 
             // Paginated files + Date metadata
             if (uri.startsWith("/api/files")) {
-                // FIXED: NanoHTTPD 2.2.0 uses getParms() returning Map<String, String>
                 Map<String, String> params = session.getParms();
                 int offset = params.containsKey("offset") ? Integer.parseInt(params.get("offset")) : 0;
                 int limit = params.containsKey("limit") ? Integer.parseInt(params.get("limit")) : 50;

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import fi.iki.elonen.NanoHTTPD;
+import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Response;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 
@@ -88,7 +89,7 @@ public class HttpServer extends NanoHTTPD {
                         }
                     } catch (Exception e) {}
                 }
-                return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "No thumbnail found");
+                return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "No thumbnail found");
             }
 
             // Full Resolution Media
@@ -103,10 +104,10 @@ public class HttpServer extends NanoHTTPD {
             }
 
         } catch (Exception e) {
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Server Error: " + e.getMessage());
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Server Error: " + e.getMessage());
         }
 
-        return newFixedLengthResponse(Status.NOT_FOUND, MIME_PLAINTEXT, "404 Not Found");
+        return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "404 Not Found");
     }
 
     private List<File> getMediaFiles(File dir) {

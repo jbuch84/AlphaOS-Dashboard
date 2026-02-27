@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 
-// CRITICAL FIX: Restored the repositories block so Gradle can download the dependencies
 repositories {
     google()
     mavenCentral()
@@ -32,6 +31,6 @@ dependencies {
     implementation 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
     compileOnly 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
     
-    // DO NOT UPGRADE: Required for PMCADemo network compatibility
-    implementation 'fi.iki.elonen:nanohttpd:2.2.0' 
+    // CRITICAL FIX: The correct Maven Group ID is org.nanohttpd
+    implementation 'org.nanohttpd:nanohttpd:2.2.0' 
 }

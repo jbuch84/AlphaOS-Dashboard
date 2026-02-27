@@ -3,218 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alpha Pro Dashboard</title>
+    <title>Alpha OS Dashboard</title>
     <style>
-        :root { --sony-orange: #ff4500; --bg-dark: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-dark); color: var(--text); margin: 0; padding: 20px; }
-        
-        /* Dashboard Header */
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--sony-orange); padding-bottom: 15px; margin-bottom: 20px; }
-        .telemetry { display: flex; gap: 15px; font-family: monospace; font-size: 0.9rem; color: #aaa; background: #222; padding: 8px 15px; border-radius: 6px; border: 1px solid #333; }
-        .telemetry span { color: var(--text); font-weight: bold; }
-        
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333; align-items: center; }
-        .btn { background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .btn:hover { border-color: #888; }
-        .btn-orange { background: var(--sony-orange); border: none; }
-        .btn-orange:hover { background: #e03e00; }
-        
-        /* Grid */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .item-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid #333; position: relative; transition: 0.2s; }
-        .item-card.selected { border-color: var(--sony-orange); box-shadow: 0 0 10px rgba(255, 69, 0, 0.3); }
-        
-        .preview { height: 140px; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
-        .preview img { width: 100%; height: 100%; object-fit: cover; }
-        .vid-icon { font-size: 3rem; opacity: 0.6; }
-        
-        .sel-box { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; cursor: pointer; z-index: 10; accent-color: var(--sony-orange); }
-        .file-info { padding: 8px; font-size: 0.75rem; text-align: center; font-family: monospace; border-top: 1px solid #222; color: #aaa; }
-        .file-info strong { color: var(--text); display: block; margin-bottom: 2px; }
+        /* Modern Dark Theme */
+        :root {
+            --bg-dark: #121212;
+            --bg-panel: #1e1e1e;
+            --accent: #4a90e2;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+        }
 
-        /* Pagination */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #333; }
-        
-        #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 2000; align-items: center; justify-content: center; flex-direction: column; }
-        #lightbox img { max-width: 90%; max-height: 80%; border: 2px solid #444; margin-bottom: 20px; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        /* Top Header & Telemetry */
+        header {
+            background-color: var(--bg-panel);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .sys-info {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Filter & Action Bar (Sticky) */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            background-color: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            background: #2a2a2a;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover { color: var(--text-main); }
+        .filter-btn.active { background: var(--accent); color: var(--text-main); }
+
+        .action-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .action-btn:disabled { background: #555; cursor: not-allowed; }
+
+        /* Gallery Grid */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .photo-card {
+            background: var(--bg-panel);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease;
+        }
+
+        .photo-card:hover { transform: scale(1.02); }
+        .photo-card.selected { border-color: var(--accent); }
+
+        .photo-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-meta {
+            padding: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Checkbox overlay */
+        .select-box {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid white;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .photo-card.selected .select-box { background: var(--accent); border-color: var(--accent); }
+
+        /* Lightbox Overlay */
+        #lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #lightbox-img {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .lightbox-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: white; font-size: 30px; cursor: pointer;
+        }
+
+        /* Loading indicator */
+        #loading { text-align: center; padding: 40px; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
-<div id="lightbox" onclick="if(event.target === this) this.style.display='none'">
-    <img id="lb-img">
-    <button class="btn btn-orange" id="lb-dl-btn" style="padding: 12px 30px; font-size: 1.1rem; border-radius: 30px;">⬇ Download High-Res</button>
-</div>
+    <header>
+        <h2>Alpha OS Dashboard</h2>
+        <div class="sys-info" id="sys-info">Checking hardware...</div>
+    </header>
 
-<header>
-    <h1 style="margin:0; font-size:1.5rem;">Alpha OS Dashboard</h1>
-    <div class="telemetry">
-        <div>SD Card Free: <span id="sd-space">-- GB</span></div>
-        <div id="selection-stats" style="color:var(--sony-orange); margin-left:15px;">0 Selected</div>
+    <div class="toolbar">
+        <div class="filter-group">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="today">Today</button>
+            <button class="filter-btn" data-filter="week">This Week</button>
+            <button class="filter-btn" data-filter="month">This Month</button>
+            <button class="filter-btn" data-filter="year">This Year</button>
+        </div>
+        <div>
+            <span id="selection-count" style="margin-right: 15px; color: var(--text-muted);">0 selected</span>
+            <button class="action-btn" id="download-btn" disabled>Download Selected</button>
+        </div>
     </div>
-</header>
 
-<div class="controls">
-    <button class="btn" onclick="toggleSelectAll()">☑ Select All (This Page)</button>
-    <button class="btn btn-orange" onclick="downloadSelected()">⬇ Download Selected</button>
-    <div style="margin-left:auto; font-size:0.9rem; color:#888;">
-        Showing <span id="page-indicator" style="color:white; font-weight:bold;">1 - 50</span> of <span id="total-indicator">...</span>
+    <div id="loading">Loading files from camera...</div>
+    <div class="gallery" id="gallery"></div>
+
+    <div id="lightbox">
+        <span class="close-btn" onclick="closeLightbox()">×</span>
+        <img id="lightbox-img" src="" alt="Full Preview">
+        <div class="lightbox-controls">
+            <button class="action-btn" onclick="downloadLightboxImage()">Download High-Res</button>
+        </div>
     </div>
-</div>
 
-<div id="main-grid" class="gallery-grid">Loading camera hardware...</div>
+    <script>
+        let allFiles = [];
+        let selectedFiles = new Set();
+        let currentFilter = 'all';
+        let currentlyViewingFile = null;
 
-<div class="pagination">
-    <button class="btn" id="btn-prev" onclick="changePage(-1)" disabled>◄ Previous 50</button>
-    <button class="btn" id="btn-next" onclick="changePage(1)">Next 50 ►</button>
-</div>
+        // Initialize App
+        async function init() {
+            fetchSystemInfo();
+            await fetchAllFiles();
+        }
 
-<script>
-    let currentOffset = 0;
-    const LIMIT = 50;
-    let totalFiles = 0;
-    let selectedFiles = new Set();
-    let currentPageFiles = [];
-
-    async function initDashboard() {
         // Fetch Hardware Telemetry
-        try {
-            const sysResp = await fetch('/api/system');
-            const sysData = await sysResp.json();
-            document.getElementById('sd-space').textContent = `${sysData.storage_gb} GB`;
-        } catch(e) { console.log("Telemetry unavailable"); }
-        
-        loadPage();
-    }
-
-    async function loadPage() {
-        const grid = document.getElementById('main-grid');
-        grid.innerHTML = '<div style="color:#888;">Querying camera API...</div>';
-        
-        try {
-            const resp = await fetch(`/api/files?offset=${currentOffset}&limit=${LIMIT}`);
-            const data = await resp.json();
-            
-            totalFiles = data.total;
-            currentPageFiles = data.files;
-            
-            document.getElementById('total-indicator').textContent = totalFiles;
-            document.getElementById('page-indicator').textContent = `${currentOffset + 1} - ${Math.min(currentOffset + LIMIT, totalFiles)}`;
-            
-            document.getElementById('btn-prev').disabled = currentOffset === 0;
-            document.getElementById('btn-next').disabled = currentOffset + LIMIT >= totalFiles;
-
-            renderGrid();
-        } catch (e) {
-            grid.innerHTML = `<div style="color:#ff6b6b;">Error connecting to API.</div>`;
-        }
-    }
-
-    function changePage(direction) {
-        currentOffset += (direction * LIMIT);
-        if (currentOffset < 0) currentOffset = 0;
-        loadPage();
-    }
-
-    function renderGrid() {
-        const grid = document.getElementById('main-grid');
-        grid.innerHTML = '';
-
-        currentPageFiles.forEach(file => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            const isImg = file.name.toUpperCase().endsWith('.JPG');
-            const dateStr = new Date(file.date).toLocaleDateString();
-            const sizeMB = (file.size / (1024*1024)).toFixed(1);
-            
-            if (selectedFiles.has(file.name)) card.classList.add('selected');
-
-            card.innerHTML = `
-                <input type="checkbox" class="sel-box" data-name="${file.name}" ${selectedFiles.has(file.name) ? 'checked' : ''}>
-                <div class="preview">
-                    ${isImg ? `<img src="/thumb/${file.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'vid-icon\\'>📷</div>'">` : `<div class="vid-icon">🎬</div>`}
-                </div>
-                <div class="file-info">
-                    <strong>${file.name}</strong>
-                    ${dateStr} &bull; ${sizeMB} MB
-                </div>
-            `;
-            
-            card.querySelector('.preview').onclick = (e) => {
-                if(e.target.classList.contains('sel-box')) return;
-                if(isImg) {
-                    document.getElementById('lb-img').src = `/full/${file.name}`;
-                    document.getElementById('lb-dl-btn').onclick = () => downloadOne(`/full/${file.name}`, file.name);
-                    document.getElementById('lightbox').style.display = 'flex';
-                } else {
-                    window.open(`/full/${file.name}`, '_blank'); // Open video in new tab
-                }
-            };
-
-            card.querySelector('.sel-box').onchange = (e) => {
-                if (e.target.checked) selectedFiles.add(file.name);
-                else selectedFiles.delete(file.name);
-                card.classList.toggle('selected', e.target.checked);
-                updateStats();
-            };
-
-            grid.appendChild(card);
-        });
-    }
-
-    function updateStats() {
-        document.getElementById('selection-stats').textContent = `${selectedFiles.size} Selected`;
-    }
-
-    function toggleSelectAll() {
-        const checkboxes = document.querySelectorAll('.sel-box');
-        const cards = document.querySelectorAll('.item-card');
-        
-        let allSelected = true;
-        checkboxes.forEach(cb => { if (!cb.checked) allSelected = false; });
-
-        checkboxes.forEach((cb, i) => {
-            const name = cb.dataset.name;
-            cb.checked = !allSelected;
-            if (!allSelected) {
-                selectedFiles.add(name);
-                cards[i].classList.add('selected');
-            } else {
-                selectedFiles.delete(name);
-                cards[i].classList.remove('selected');
+        async function fetchSystemInfo() {
+            try {
+                const res = await fetch('/api/system');
+                const data = await res.json();
+                document.getElementById('sys-info').innerText = `SD Card: ${data.storage_gb} GB Free`;
+            } catch (e) {
+                document.getElementById('sys-info').innerText = "Hardware telemetry unavailable";
             }
-        });
-        updateStats();
-    }
-
-    function downloadOne(url, name) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-
-    async function downloadSelected() {
-        const files = Array.from(selectedFiles);
-        if (files.length === 0) return alert("Please select at least one file.");
-        if (!confirm(`Download ${files.length} files sequentially?\n(Do not close this tab)`)) return;
-
-        const btn = document.querySelector('.btn-orange[onclick="downloadSelected()"]');
-        const originalText = btn.textContent;
-
-        for (let i = 0; i < files.length; i++) {
-            btn.textContent = `Downloading ${i+1} of ${files.length}...`;
-            downloadOne(`/full/${files[i]}`, files[i]);
-            await new Promise(r => setTimeout(r, 1500)); 
         }
-        
-        btn.textContent = originalText;
-        alert("Batch download complete!");
-    }
 
-    initDashboard();
-</script>
+        // Fetch all files using the pagination endpoint silently
+        async function fetchAllFiles() {
+            let offset = 0;
+            const limit = 50; // Chunks of 50 prevent camera crashes
+            let keepFetching = true;
+            
+            while (keepFetching) {
+                try {
+                    const res = await fetch(`/api/files?offset=${offset}&limit=${limit}`);
+                    const data = await res.json();
+                    
+                    if (data.files && data.files.length > 0) {
+                        allFiles = allFiles.concat(data.files);
+                        offset += limit;
+                        // Render partially as we load
+                        renderGallery(); 
+                    } else {
+                        keepFetching = false;
+                    }
+                    
+                    if (allFiles.length >= data.total) {
+                        keepFetching = false;
+                    }
+                } catch (e) {
+                    console.error("Error fetching files", e);
+                    keepFetching = false;
+                }
+            }
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Date Filter Logic
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.getAttribute('data-filter');
+                renderGallery();
+            });
+        });
+
+        function getFilteredFiles() {
+            if (currentFilter === 'all') return allFiles;
+
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const startOfWeek = startOfToday - (now.getDay() * 24 * 60 * 60 * 1000);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+            const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+
+            return allFiles.filter(file => {
+                switch(currentFilter) {
+                    case 'today': return file.date >= startOfToday;
+                    case 'week': return file.date >= startOfWeek;
+                    case 'month': return file.date >= startOfMonth;
+                    case 'year': return file.date >= startOfYear;
+                    default: return true;
+                }
+            });
+        }
+
+        // Render the Grid
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            
+            const filesToShow = getFilteredFiles();
+
+            filesToShow.forEach(file => {
+                const isSelected = selectedFiles.has(file.name);
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                
+                const card = document.createElement('div');
+                card.className = `photo-card ${isSelected ? 'selected' : ''}`;
+                
+                // Clicking the card selects it
+                card.onclick = (e) => {
+                    // If they clicked the image directly, open lightbox instead of selecting
+                    if (e.target.tagName === 'IMG') {
+                        openLightbox(file);
+                        return;
+                    }
+                    toggleSelection(file.name, card);
+                };
+
+                card.innerHTML = `
+                    <div class="select-box"></div>
+                    <img class="photo-img" src="/thumb/${file.name}" loading="lazy" alt="Thumbnail">
+                    <div class="photo-meta">
+                        <span>${file.name}</span>
+                        <span>${sizeMB} MB</span>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        // Selection Logic
+        function toggleSelection(fileName, cardElement) {
+            if (selectedFiles.has(fileName)) {
+                selectedFiles.delete(fileName);
+                cardElement.classList.remove('selected');
+            } else {
+                selectedFiles.add(fileName);
+                cardElement.classList.add('selected');
+            }
+            updateDownloadButton();
+        }
+
+        function updateDownloadButton() {
+            const btn = document.getElementById('download-btn');
+            const countStr = document.getElementById('selection-count');
+            const count = selectedFiles.size;
+            
+            countStr.innerText = `${count} selected`;
+            btn.disabled = count === 0;
+            btn.innerText = count > 0 ? `Download ${count} Files` : `Download Selected`;
+        }
+
+        // Lightbox Logic (Blur-up effect)
+        function openLightbox(file) {
+            currentlyViewingFile = file;
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            
+            // 1. Instantly load the tiny blurry thumbnail
+            img.src = `/thumb/${file.name}`;
+            img.style.filter = "blur(10px)"; 
+            lightbox.style.display = 'flex';
+
+            // 2. Silently fetch the full resolution image
+            const fullResImage = new Image();
+            fullResImage.src = `/full/${file.name}`;
+            fullResImage.onload = () => {
+                // 3. Swap it and remove the blur when it finishes loading over Wi-Fi
+                img.src = fullResImage.src;
+                img.style.filter = "blur(0px)";
+                img.style.transition = "filter 0.3s ease";
+            };
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+            currentlyViewingFile = null;
+        }
+
+        function downloadLightboxImage() {
+            if (currentlyViewingFile) {
+                triggerDownload(currentlyViewingFile.name);
+            }
+        }
+
+        // Sequential Batch Downloader (Protects Camera processor)
+        document.getElementById('download-btn').addEventListener('click', async () => {
+            const filesToDownload = Array.from(selectedFiles);
+            const btn = document.getElementById('download-btn');
+            
+            for (let i = 0; i < filesToDownload.length; i++) {
+                btn.innerText = `Downloading ${i + 1} of ${filesToDownload.length}...`;
+                triggerDownload(filesToDownload[i]);
+                
+                // 1.5 Second Breather to prevent camera OS crash
+                await new Promise(r => setTimeout(r, 1500)); 
+            }
+            
+            btn.innerText = "Download Complete!";
+            setTimeout(() => {
+                selectedFiles.clear();
+                renderGallery();
+                updateDownloadButton();
+            }, 2000);
+        });
+
+        function triggerDownload(fileName) {
+            const link = document.createElement('a');
+            link.href = `/full/${fileName}`;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Start everything
+        init();
+    </script>
 </body>
 </html>

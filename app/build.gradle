@@ -11,11 +11,20 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    // CRITICAL FIX: Renames the output APK from app-debug.apk to a custom name
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            // This will output: AlphaOS-Dashboard-v1.0.apk
+            outputFileName = "AlphaOS-Dashboard-v${variant.versionName}.apk"
+        }
+    }
 }
 
 dependencies {
     implementation 'com.github.ma1co.OpenMemories-Framework:framework:-SNAPSHOT'
     compileOnly 'com.github.ma1co.OpenMemories-Framework:stubs:-SNAPSHOT'
-    // Downgraded to match PMCADemo's original working architecture
-    implementation 'org.nanohttpd:nanohttpd:2.2.0'
+    
+    // DO NOT UPGRADE: Required for PMCADemo network compatibility
+    implementation 'fi.iki.elonen:nanohttpd:2.2.0' 
 }

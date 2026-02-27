@@ -1,81 +1,25 @@
-# PMCADemo #
+# Alpha OS Dashboard (Sony PMCA File Server)
 
-An Android demo app for Sony cameras to test some features.
+A modern, lightning-fast web dashboard and file server for Sony Alpha cameras. 
 
-## Installation ##
-Install it here: [sony-pmca.appspot.com/apps](https://sony-pmca.appspot.com/apps)
+Built on the PlayMemories Camera Apps (PMCA) OpenMemories framework, this app bypasses Sony's legacy restrictions to serve your photos directly to your phone or computer over local Wi-Fi. It features a responsive, dark-mode web UI, instant EXIF extraction, and batch downloading—all processed securely offline.
 
-## Usage ##
-* The trash button is mapped to the back key
-* The app writes a log to the SD card (*PMCADEMO/LOG.TXT*)
+[Image of modern software architecture showing a mobile device connecting directly to a camera via local Wi-Fi]
 
-The following options are available:
+## ✨ Features
+* **Zero-Friction Web UI:** No dedicated mobile apps required. Just connect to the camera's Wi-Fi and open your browser to view a sleek, responsive gallery.
+* **Lightning Fast Previews:** Uses the camera's embedded hardware thumbnails for instant "blur-up" loading, preventing the camera's processor from crashing under heavy loads.
+* **Offline EXIF Extraction:** Click any photo to see exactly how you shot it (Aperture, Shutter Speed, ISO, Focal Length). The heavy binary math is processed locally by your browser, keeping the camera blazing fast.
+* **Safe Batch Downloading:** Select multiple photos and download them to your device. The app uses a throttled sequential download queue to protect the decade-old camera hardware from network flooding.
+* **Date Filters:** Instantly filter your SD card by *Today*, *This Week*, *This Month*, or *This Year*.
 
-### Camera ##
-Displays the live view image and allows you to take a picture. The last settings are used. Mode dial changes are ignored.
+## 📷 Supported Cameras
+This app supports Sony cameras compatible with the PMCA framework (Android 2.3.7 / API 10). This includes popular models like the **a5100, a6000, a6300, a6500, a7S II, a7R II**, and various **RX100** models.
 
-* Half-press the shutter button to focus
-* Fully press the shutter button to take a picture (it is saved on your SD card just as if you had taken it outside of Android) 
-* Press the trash button to exit
+*Note: This app is optimized specifically for JPEGs and MP4s. Sony RAW (`.arw`) files are intentionally filtered out to prevent browser memory crashes over slow Wi-Fi connections.*
 
-### Key events ###
-Displays key events.
+## 🚀 Installation
 
-* Press any key or disconnect the lens to log it on the screen
-* Press the trash button to exit
-
-### Properties ###
-Displays some camera properties (Model, serial number, etc.)
-
-* Press the trash button to exit
-
-### Time ###
-Displays the current time. The camera time zone is used.
-
-* Press the trash button to exit
-
-### Internet ###
-Connects to one of the configured wifi networks and displays a web browser. A simple web server is started, too. Open the displayed URL on any client in the same network.
-
-* Use the up / down / left / right and enter keys to use the browser
-* Press the trash button to exit
-
-### Wifi settings ###
-Opens the standard wifi settings.
-
-* Press the menu button to exit
-
-### Wifi direct ###
-Enables the camera's wifi direct network and starts a simple web server. Connect a client to the wifi and open the displayed URL. WPS is currently not supported. 
-
-* Press the trash button to exit
-
-### Display ###
-Logs changes of the active display.
-
-* Press the enter button or use the eyepiece sensor to change displays
-* Press the trash button to exit
-
-### LEDs ###
-Test some camera LEDs. The charging LED doesn't seem to be supported.
-
-* Half-press the shutter button to turn on the AF light
-* Press the enter button to flash the card LED in different speeds
-* Press the trash button to exit
-
-### Playback ###
-Displays the images on your SD card.
-
-* Use the up / down keys to select an image
-* Press the enter button to display it
-* Press the trash button to exit
-
-### Install ###
-Install new apps from your SD card. All *.spk* files under *[SD card]/PMCADEMO* are listed. You can download apps in spk format [here](https://sony-pmca.appspot.com/apps).
-
-* Use the up / down keys to select a package
-* Press the enter button to install it
-* Press the trash button to exit
-
-## The Framework ##
-This app uses several Sony custom APIs. See [OpenMemories: Framework](https://github.com/ma1co/OpenMemories-Framework) for more information.
+1. **Download the APK:** Go to the [Releases](../../releases) page of this repository and download the latest `AlphaOS-Dashboard-v1.X.apk` file.
+2. **Connect Your Camera:** Connect your Sony camera to your computer via USB. Ensure the USB connection mode is set to **MTP** or **Mass Storage**.
+3. **Install via PMCA-GUI

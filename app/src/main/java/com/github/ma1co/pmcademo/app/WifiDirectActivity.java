@@ -79,7 +79,7 @@ public class WifiDirectActivity extends BaseActivity {
             }
         };
 
-        httpServer = new HttpServer();
+        httpServer = new HttpServer(this);
     }
 
     @Override

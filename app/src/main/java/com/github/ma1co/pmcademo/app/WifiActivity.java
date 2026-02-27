@@ -1,6 +1,5 @@
 package com.github.ma1co.pmcademo.app;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +13,8 @@ import android.widget.TextView;
 
 import java.io.IOException;
 
-public class WifiActivity extends Activity {
+// CRITICAL FIX: We are now extending BaseActivity so the camera doesn't freeze the power button.
+public class WifiActivity extends BaseActivity { 
     private WifiManager wifiManager;
     private ConnectivityManager connectivityManager;
     private TextView textView;
@@ -44,6 +44,10 @@ public class WifiActivity extends Activity {
     protected void onResume() {
         super.onResume();
         registerReceiver(receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        
+        // Tells the OpenMemories BaseActivity to prevent the camera from falling asleep while hosting the server
+        setAutoPowerOffMode(false); 
+
         if (!wifiManager.isWifiEnabled()) {
             textView.setText("Enabling Wi-Fi...");
             wifiManager.setWifiEnabled(true);
@@ -55,6 +59,9 @@ public class WifiActivity extends Activity {
     protected void onPause() {
         super.onPause();
         unregisterReceiver(receiver);
+        
+        // Re-enables normal camera sleep behavior when you exit
+        setAutoPowerOffMode(true); 
     }
 
     @Override
@@ -87,7 +94,6 @@ public class WifiActivity extends Activity {
 
     private void startServer() {
         if (httpServer == null) {
-            // Passes 'this' context so the server can access index.html
             httpServer = new HttpServer(this);
             try {
                 httpServer.start();

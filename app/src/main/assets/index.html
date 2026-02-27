@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alpha OS Dashboard</title>
     <style>
-        /* Modern Dark Theme */
+        /* Sony Alpha Theme */
         :root {
-            --bg-dark: #121212;
-            --bg-panel: #1e1e1e;
-            --accent: #4a90e2;
+            --bg-dark: #0a0a0a;
+            --bg-panel: #1a1a1a;
+            --accent: #ff5000; /* Sony Alpha Orange */
             --text-main: #ffffff;
             --text-muted: #888888;
         }
@@ -21,26 +21,35 @@
             color: var(--text-main);
         }
 
-        /* Top Header & Telemetry */
+        /* Top Header */
         header {
             background-color: var(--bg-panel);
             padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #333;
+            border-bottom: 2px solid #2a2a2a;
+        }
+
+        h2 {
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .sys-info {
             font-size: 14px;
-            color: var(--text-muted);
+            color: var(--accent);
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        /* Filter & Action Bar (Sticky) */
+        /* Toolbar */
         .toolbar {
             position: sticky;
             top: 0;
-            background-color: rgba(30, 30, 30, 0.95);
+            background-color: rgba(26, 26, 26, 0.95);
             backdrop-filter: blur(10px);
             padding: 15px 20px;
             display: flex;
@@ -53,7 +62,7 @@
         .filter-group {
             display: flex;
             gap: 8px;
-            background: #2a2a2a;
+            background: #222;
             padding: 4px;
             border-radius: 8px;
         }
@@ -71,7 +80,7 @@
         }
 
         .filter-btn:hover { color: var(--text-main); }
-        .filter-btn.active { background: var(--accent); color: var(--text-main); }
+        .filter-btn.active { background: #333; color: var(--accent); }
 
         .action-btn {
             background: var(--accent);
@@ -81,9 +90,11 @@
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
+            transition: background 0.2s;
         }
-
-        .action-btn:disabled { background: #555; cursor: not-allowed; }
+        
+        .action-btn:hover { background: #e04600; }
+        .action-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
 
         /* Gallery Grid */
         .gallery {
@@ -98,7 +109,6 @@
             border-radius: 8px;
             overflow: hidden;
             position: relative;
-            cursor: pointer;
             border: 2px solid transparent;
             transition: transform 0.2s ease;
         }
@@ -111,6 +121,7 @@
             height: 150px;
             object-fit: cover;
             display: block;
+            cursor: pointer;
         }
 
         .photo-meta {
@@ -121,26 +132,63 @@
             justify-content: space-between;
         }
 
-        /* Checkbox overlay */
+        /* Improved Checkbox */
         .select-box {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 20px;
-            height: 20px;
-            background: rgba(0,0,0,0.5);
-            border: 2px solid white;
+            top: 8px;
+            left: 8px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.8);
             border-radius: 4px;
-            pointer-events: none;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
         }
-        .photo-card.selected .select-box { background: var(--accent); border-color: var(--accent); }
+        
+        .select-box:hover { border-color: var(--accent); }
+        
+        .photo-card.selected .select-box { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+        }
+        
+        .photo-card.selected .select-box::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 14px;
+        }
 
-        /* Lightbox Overlay */
+        /* Load More Button */
+        .load-more-container {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+        
+        #load-more-btn {
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        #load-more-btn:hover { border-color: var(--accent); }
+
+        /* Lightbox */
         #lightbox {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -149,9 +197,24 @@
 
         #lightbox-img {
             max-width: 90%;
-            max-height: 80vh;
+            max-height: 75vh;
             border-radius: 4px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
+        }
+
+        .lightbox-info-bar {
+            margin-top: 20px;
+            text-align: center;
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        .lightbox-info-bar span {
+            margin: 0 10px;
+            background: #222;
+            padding: 5px 12px;
+            border-radius: 4px;
+            border: 1px solid #333;
         }
 
         .lightbox-controls {
@@ -163,17 +226,18 @@
         .close-btn {
             position: absolute;
             top: 20px; right: 30px;
-            color: white; font-size: 30px; cursor: pointer;
+            color: white; font-size: 40px; cursor: pointer;
+            line-height: 1;
         }
+        .close-btn:hover { color: var(--accent); }
 
-        /* Loading indicator */
         #loading { text-align: center; padding: 40px; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
     <header>
-        <h2>Alpha OS Dashboard</h2>
+        <h2>ALPHA OS DASHBOARD</h2>
         <div class="sys-info" id="sys-info">Checking hardware...</div>
     </header>
 
@@ -191,14 +255,25 @@
         </div>
     </div>
 
-    <div id="loading">Loading files from camera...</div>
+    <div id="loading">Syncing camera database...</div>
     <div class="gallery" id="gallery"></div>
+    
+    <div class="load-more-container" id="load-more-container" style="display: none;">
+        <button id="load-more-btn" onclick="loadMore()">Load More Photos</button>
+    </div>
 
     <div id="lightbox">
         <span class="close-btn" onclick="closeLightbox()">×</span>
         <img id="lightbox-img" src="" alt="Full Preview">
+        
+        <div class="lightbox-info-bar" id="lightbox-info">
+            <span id="lb-name">IMG_1234.JPG</span>
+            <span id="lb-date">Oct 24, 2025</span>
+            <span id="lb-size">24.5 MB</span>
+        </div>
+
         <div class="lightbox-controls">
-            <button class="action-btn" onclick="downloadLightboxImage()">Download High-Res</button>
+            <button class="action-btn" onclick="downloadLightboxImage()">Download Original File</button>
         </div>
     </div>
 
@@ -207,28 +282,29 @@
         let selectedFiles = new Set();
         let currentFilter = 'all';
         let currentlyViewingFile = null;
+        
+        // Pagination state
+        let displayLimit = 50; 
+        const displayChunkSize = 50;
 
-        // Initialize App
         async function init() {
             fetchSystemInfo();
             await fetchAllFiles();
         }
 
-        // Fetch Hardware Telemetry
         async function fetchSystemInfo() {
             try {
                 const res = await fetch('/api/system');
                 const data = await res.json();
-                document.getElementById('sys-info').innerText = `SD Card: ${data.storage_gb} GB Free`;
+                document.getElementById('sys-info').innerText = `SD CARD: ${data.storage_gb} GB FREE`;
             } catch (e) {
-                document.getElementById('sys-info').innerText = "Hardware telemetry unavailable";
+                document.getElementById('sys-info').innerText = "SYSTEM TELEMETRY UNAVAILABLE";
             }
         }
 
-        // Fetch all files using the pagination endpoint silently
         async function fetchAllFiles() {
             let offset = 0;
-            const limit = 50; // Chunks of 50 prevent camera crashes
+            const limit = 50; 
             let keepFetching = true;
             
             while (keepFetching) {
@@ -239,7 +315,6 @@
                     if (data.files && data.files.length > 0) {
                         allFiles = allFiles.concat(data.files);
                         offset += limit;
-                        // Render partially as we load
                         renderGallery(); 
                     } else {
                         keepFetching = false;
@@ -256,12 +331,13 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        // Date Filter Logic
+        // Date Filters
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 currentFilter = e.target.getAttribute('data-filter');
+                displayLimit = displayChunkSize; // Reset pagination on filter change
                 renderGallery();
             });
         });
@@ -286,12 +362,12 @@
             });
         }
 
-        // Render the Grid
         function renderGallery() {
             const gallery = document.getElementById('gallery');
             gallery.innerHTML = '';
             
-            const filesToShow = getFilteredFiles();
+            const filteredFiles = getFilteredFiles();
+            const filesToShow = filteredFiles.slice(0, displayLimit);
 
             filesToShow.forEach(file => {
                 const isSelected = selectedFiles.has(file.name);
@@ -300,19 +376,9 @@
                 const card = document.createElement('div');
                 card.className = `photo-card ${isSelected ? 'selected' : ''}`;
                 
-                // Clicking the card selects it
-                card.onclick = (e) => {
-                    // If they clicked the image directly, open lightbox instead of selecting
-                    if (e.target.tagName === 'IMG') {
-                        openLightbox(file);
-                        return;
-                    }
-                    toggleSelection(file.name, card);
-                };
-
                 card.innerHTML = `
-                    <div class="select-box"></div>
-                    <img class="photo-img" src="/thumb/${file.name}" loading="lazy" alt="Thumbnail">
+                    <div class="select-box" onclick="toggleSelection(event, '${file.name}')"></div>
+                    <img class="photo-img" src="/thumb/${file.name}" loading="lazy" alt="Thumbnail" onclick="openLightbox('${file.name}')">
                     <div class="photo-meta">
                         <span>${file.name}</span>
                         <span>${sizeMB} MB</span>
@@ -320,10 +386,26 @@
                 `;
                 gallery.appendChild(card);
             });
+
+            // Toggle Load More button visibility
+            const loadMoreContainer = document.getElementById('load-more-container');
+            if (filteredFiles.length > displayLimit) {
+                loadMoreContainer.style.display = 'block';
+            } else {
+                loadMoreContainer.style.display = 'none';
+            }
         }
 
-        // Selection Logic
-        function toggleSelection(fileName, cardElement) {
+        function loadMore() {
+            displayLimit += displayChunkSize;
+            renderGallery();
+        }
+
+        // Dedicated Checkbox Toggle Logic
+        function toggleSelection(event, fileName) {
+            event.stopPropagation(); // Prevents click from bubbling to the card
+            const cardElement = event.target.parentElement;
+            
             if (selectedFiles.has(fileName)) {
                 selectedFiles.delete(fileName);
                 cardElement.classList.remove('selected');
@@ -344,22 +426,32 @@
             btn.innerText = count > 0 ? `Download ${count} Files` : `Download Selected`;
         }
 
-        // Lightbox Logic (Blur-up effect)
-        function openLightbox(file) {
-            currentlyViewingFile = file;
+        // Lightbox Logic
+        function openLightbox(fileName) {
+            // Find the full file object from our array
+            currentlyViewingFile = allFiles.find(f => f.name === fileName);
+            if (!currentlyViewingFile) return;
+
             const lightbox = document.getElementById('lightbox');
             const img = document.getElementById('lightbox-img');
             
-            // 1. Instantly load the tiny blurry thumbnail
-            img.src = `/thumb/${file.name}`;
+            // Populate the Info Bar
+            const sizeMB = (currentlyViewingFile.size / (1024 * 1024)).toFixed(1);
+            const dateObj = new Date(currentlyViewingFile.date);
+            const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            document.getElementById('lb-name').innerText = currentlyViewingFile.name;
+            document.getElementById('lb-size').innerText = `${sizeMB} MB`;
+            document.getElementById('lb-date').innerText = dateStr;
+            
+            // Blur-up image load
+            img.src = `/thumb/${currentlyViewingFile.name}`;
             img.style.filter = "blur(10px)"; 
             lightbox.style.display = 'flex';
 
-            // 2. Silently fetch the full resolution image
             const fullResImage = new Image();
-            fullResImage.src = `/full/${file.name}`;
+            fullResImage.src = `/full/${currentlyViewingFile.name}`;
             fullResImage.onload = () => {
-                // 3. Swap it and remove the blur when it finishes loading over Wi-Fi
                 img.src = fullResImage.src;
                 img.style.filter = "blur(0px)";
                 img.style.transition = "filter 0.3s ease";
@@ -377,7 +469,6 @@
             }
         }
 
-        // Sequential Batch Downloader (Protects Camera processor)
         document.getElementById('download-btn').addEventListener('click', async () => {
             const filesToDownload = Array.from(selectedFiles);
             const btn = document.getElementById('download-btn');
@@ -385,8 +476,6 @@
             for (let i = 0; i < filesToDownload.length; i++) {
                 btn.innerText = `Downloading ${i + 1} of ${filesToDownload.length}...`;
                 triggerDownload(filesToDownload[i]);
-                
-                // 1.5 Second Breather to prevent camera OS crash
                 await new Promise(r => setTimeout(r, 1500)); 
             }
             
@@ -407,7 +496,6 @@
             document.body.removeChild(link);
         }
 
-        // Start everything
         init();
     </script>
 </body>

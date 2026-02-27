@@ -1,21 +1,25 @@
 package com.github.ma1co.pmcademo.app;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.net.wifi.WifiConfiguration;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.widget.TextView;
+
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.Enumeration;
 
 public class MainActivity extends Activity {
-    private HttpServer server;
-    private TextView textView;
     private WifiManager wifiManager;
+    private ConnectivityManager connectivityManager;
+    private TextView textView;
+    private HttpServer httpServer;
+    private BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,87 +29,82 @@ public class MainActivity extends Activity {
         textView.setPadding(30, 30, 30, 30);
         setContentView(textView);
 
-        textView.setText("Starting Camera Wi-Fi Hotspot...");
-
-        // 1. Initialize Wi-Fi Manager
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        // 2. Force the camera to broadcast its own Access Point
-        startHotspot();
-
-        // 3. Start the custom File Server
-        server = new HttpServer(this);
-        try {
-            server.start();
-        } catch (IOException e) {
-            textView.setText("Server Error: " + e.getMessage());
-            return;
-        }
-
-        // 4. Retrieve the actual Hotspot IP (not the router IP)
-        String ipAddress = getHotspotIPAddress();
-        if (ipAddress == null) {
-            ipAddress = "192.168.43.1"; // Default Sony/Android AP IP fallback
-        }
-
-        // 5. Update the camera screen with connection instructions
-        textView.setText("AlphaProManager Active\n\n" +
-                         "1. Connect phone/PC to this camera's Wi-Fi network.\n" +
-                         "2. Open your browser to:\n\n" +
-                         "http://" + ipAddress + ":8080");
-    }
-
-    private void startHotspot() {
-        try {
-            // Turn off regular Wi-Fi so the chip can switch to Hotspot mode
-            if (wifiManager.isWifiEnabled()) {
-                wifiManager.setWifiEnabled(false);
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updateStatus();
             }
-            
-            // Android 4.x (Sony API) uses reflection to start the Hotspot
-            Method method = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-            method.invoke(wifiManager, null, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        };
     }
 
-    private void stopHotspot() {
-        try {
-            Method method = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-            method.invoke(wifiManager, null, false);
-        } catch (Exception e) {
-            e.printStackTrace();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        
+        // Turn on standard Home Wi-Fi mode (Infrastructure), NOT Hotspot
+        if (!wifiManager.isWifiEnabled()) {
+            textView.setText("Enabling Wi-Fi...");
+            wifiManager.setWifiEnabled(true);
         }
+        updateStatus();
     }
 
-    private String getHotspotIPAddress() {
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                // Filter for wireless or access point interfaces
-                if (intf.getName().contains("wlan") || intf.getName().contains("ap")) {
-                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                        InetAddress inetAddress = enumIpAddr.nextElement();
-                        // Get the IPv4 address
-                        if (!inetAddress.isLoopbackAddress() && inetAddress.getAddress().length == 4) {
-                            return inetAddress.getHostAddress();
-                        }
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(receiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (server != null) {
-            server.stop();
+        stopServer();
+    }
+
+    private void updateStatus() {
+        NetworkInfo info = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (info != null && info.isConnected()) {
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            int ip = wifiInfo.getIpAddress();
+            if (ip != 0) {
+                // Successfully connected to Home Router
+                String ipAddress = String.format("%d.%d.%d.%d", (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff));
+                textView.setText("Connected to: " + wifiInfo.getSSID() + "\n\n" +
+                                 "Open your PC browser to:\n\n" +
+                                 "http://" + ipAddress + ":" + HttpServer.PORT);
+                startServer();
+            } else {
+                textView.setText("Obtaining IP address from your router...");
+            }
+        } else {
+            // Not connected. Wait for connection or prompt user to save a network.
+            textView.setText("Searching for home Wi-Fi...\n\n" +
+                             "If you haven't entered your Wi-Fi password yet, exit the app and go to:\n" +
+                             "MENU -> Wireless -> Access Point Settings");
+            stopServer();
         }
-        stopHotspot();
+    }
+
+    private void startServer() {
+        if (httpServer == null) {
+            // Passes this Context so HttpServer can load index.html
+            httpServer = new HttpServer(this);
+            try {
+                httpServer.start();
+            } catch (IOException e) {
+                textView.setText("Server error: " + e.getMessage());
+            }
+        }
+    }
+
+    private void stopServer() {
+        if (httpServer != null) {
+            httpServer.stop();
+            httpServer = null;
+        }
     }
 }

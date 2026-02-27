@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+// CRITICAL FIX: Restored the repositories block so Gradle can download the dependencies
+repositories {
+    google()
+    mavenCentral()
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -12,10 +20,9 @@ android {
         versionName "1.0"
     }
 
-    // CRITICAL FIX: Renames the output APK from app-debug.apk to a custom name
+    // Renames the output APK from app-debug.apk to AlphaOS-Dashboard-v1.0.apk
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            // This will output: AlphaOS-Dashboard-v1.0.apk
             outputFileName = "AlphaOS-Dashboard-v${variant.versionName}.apk"
         }
     }

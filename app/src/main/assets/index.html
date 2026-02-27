@@ -9,7 +9,7 @@
         :root {
             --bg-dark: #0a0a0a;
             --bg-panel: #1a1a1a;
-            --accent: #ff5000; /* Sony Alpha Orange */
+            --accent: #ff5000;
             --text-main: #ffffff;
             --text-muted: #888888;
         }
@@ -21,7 +21,6 @@
             color: var(--text-main);
         }
 
-        /* Top Header */
         header {
             background-color: var(--bg-panel);
             padding: 20px;
@@ -31,21 +30,9 @@
             border-bottom: 2px solid #2a2a2a;
         }
 
-        h2 {
-            margin: 0;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
+        h2 { margin: 0; font-weight: 600; letter-spacing: 0.5px; }
+        .sys-info { font-size: 14px; color: var(--accent); font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
 
-        .sys-info {
-            font-size: 14px;
-            color: var(--accent);
-            font-weight: 500;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        /* Toolbar */
         .toolbar {
             position: sticky;
             top: 0;
@@ -59,178 +46,44 @@
             border-bottom: 1px solid #333;
         }
 
-        .filter-group {
-            display: flex;
-            gap: 8px;
-            background: #222;
-            padding: 4px;
-            border-radius: 8px;
-        }
-
-        .filter-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
+        .filter-group { display: flex; gap: 8px; background: #222; padding: 4px; border-radius: 8px; }
+        .filter-btn { background: transparent; border: none; color: var(--text-muted); padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
         .filter-btn:hover { color: var(--text-main); }
         .filter-btn.active { background: #333; color: var(--accent); }
 
-        .action-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
+        .action-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .action-btn:hover { background: #e04600; }
         .action-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
 
-        /* Gallery Grid */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            padding: 20px;
-        }
-
-        .photo-card {
-            background: var(--bg-panel);
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            border: 2px solid transparent;
-            transition: transform 0.2s ease;
-        }
-
+        .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
+        .photo-card { background: var(--bg-panel); border-radius: 8px; overflow: hidden; position: relative; border: 2px solid transparent; transition: transform 0.2s ease; }
         .photo-card:hover { transform: scale(1.02); }
         .photo-card.selected { border-color: var(--accent); }
 
-        .photo-img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            display: block;
-            cursor: pointer;
-        }
+        .photo-img { width: 100%; height: 150px; object-fit: cover; display: block; cursor: pointer; }
+        .photo-meta { padding: 10px; font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
 
-        .photo-meta {
-            padding: 10px;
-            font-size: 12px;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* Improved Checkbox */
-        .select-box {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            width: 24px;
-            height: 24px;
-            background: rgba(0,0,0,0.6);
-            border: 2px solid rgba(255,255,255,0.8);
-            border-radius: 4px;
-            cursor: pointer;
-            z-index: 10;
-            transition: all 0.2s;
-        }
-        
+        .select-box { position: absolute; top: 8px; left: 8px; width: 24px; height: 24px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.8); border-radius: 4px; cursor: pointer; z-index: 10; transition: all 0.2s; }
         .select-box:hover { border-color: var(--accent); }
-        
-        .photo-card.selected .select-box { 
-            background: var(--accent); 
-            border-color: var(--accent); 
-        }
-        
-        .photo-card.selected .select-box::after {
-            content: '✓';
-            color: white;
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold;
-            font-size: 14px;
-        }
+        .photo-card.selected .select-box { background: var(--accent); border-color: var(--accent); }
+        .photo-card.selected .select-box::after { content: '✓'; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; font-size: 14px; }
 
-        /* Load More Button */
-        .load-more-container {
-            text-align: center;
-            padding: 20px;
-            margin-bottom: 40px;
-        }
-        
-        #load-more-btn {
-            background: #222;
-            color: white;
-            border: 1px solid #444;
-            padding: 12px 30px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
+        .load-more-container { text-align: center; padding: 20px; margin-bottom: 40px; }
+        #load-more-btn { background: #222; color: white; border: 1px solid #444; padding: 12px 30px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: border-color 0.2s; }
         #load-more-btn:hover { border-color: var(--accent); }
 
-        /* Lightbox */
-        #lightbox {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
+        /* Lightbox & EXIF Telemetry */
+        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
+        #lightbox-img { max-width: 90%; max-height: 70vh; border-radius: 4px; box-shadow: 0 4px 30px rgba(0,0,0,0.8); }
 
-        #lightbox-img {
-            max-width: 90%;
-            max-height: 75vh;
-            border-radius: 4px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.8);
-        }
-
-        .lightbox-info-bar {
-            margin-top: 20px;
-            text-align: center;
-            color: #ccc;
-            font-size: 14px;
-        }
+        .lightbox-info-bar { margin-top: 15px; text-align: center; color: #ccc; font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 90%; }
+        .lightbox-info-bar span { background: #222; padding: 6px 14px; border-radius: 4px; border: 1px solid #333; }
         
-        .lightbox-info-bar span {
-            margin: 0 10px;
-            background: #222;
-            padding: 5px 12px;
-            border-radius: 4px;
-            border: 1px solid #333;
-        }
+        .exif-data { color: var(--accent); font-family: monospace; font-size: 15px; }
 
-        .lightbox-controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 20px; right: 30px;
-            color: white; font-size: 40px; cursor: pointer;
-            line-height: 1;
-        }
+        .lightbox-controls { margin-top: 20px; display: flex; gap: 15px; }
+        .close-btn { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; line-height: 1; }
         .close-btn:hover { color: var(--accent); }
-
         #loading { text-align: center; padding: 40px; color: var(--text-muted); }
     </style>
 </head>
@@ -267,9 +120,10 @@
         <img id="lightbox-img" src="" alt="Full Preview">
         
         <div class="lightbox-info-bar" id="lightbox-info">
-            <span id="lb-name">IMG_1234.JPG</span>
-            <span id="lb-date">Oct 24, 2025</span>
-            <span id="lb-size">24.5 MB</span>
+            <span id="lb-name"></span>
+            <span id="lb-date"></span>
+            <span id="lb-size"></span>
+            <span class="exif-data" id="lb-exif">Reading Metadata...</span>
         </div>
 
         <div class="lightbox-controls">
@@ -282,10 +136,79 @@
         let selectedFiles = new Set();
         let currentFilter = 'all';
         let currentlyViewingFile = null;
-        
-        // Pagination state
         let displayLimit = 50; 
         const displayChunkSize = 50;
+
+        // --- NATIVE OFFLINE EXIF PARSER ---
+        function parseExif(view) {
+            if (view.getUint16(0, false) !== 0xFFD8) return null; // Not a valid JPEG
+            let offset = 2;
+            let length = view.byteLength;
+            let marker;
+            
+            while (offset < length) {
+                if (view.getUint8(offset) !== 0xFF) break;
+                marker = view.getUint8(offset + 1);
+                if (marker === 0xE1) { // APP1 Marker (EXIF)
+                    return extractTags(view, offset + 4);
+                }
+                offset += 2 + view.getUint16(offset + 2, false);
+            }
+            return null;
+        }
+
+        function extractTags(view, start) {
+            if (view.getUint32(start, false) !== 0x45786966) return null; // 'Exif'
+            const tiffOffset = start + 6;
+            const littleEndian = view.getUint16(tiffOffset, false) === 0x4949;
+            const ifd0Offset = view.getUint32(tiffOffset + 4, littleEndian);
+
+            let subIfdOffset = 0;
+            let entries = view.getUint16(tiffOffset + ifd0Offset, littleEndian);
+            for (let i = 0; i < entries; i++) {
+                let entryOffset = tiffOffset + ifd0Offset + 2 + (i * 12);
+                let tag = view.getUint16(entryOffset, littleEndian);
+                if (tag === 0x8769) { // ExifOffset Tag
+                    subIfdOffset = view.getUint32(entryOffset + 8, littleEndian);
+                    break;
+                }
+            }
+            
+            if (!subIfdOffset) return null;
+
+            // Target Hex Tags: 829A (Shutter), 829D (Aperture), 8827 (ISO), 920A (Focal Length)
+            const targetTags = { 0x829A: 'shutter', 0x829D: 'aperture', 0x8827: 'iso', 0x920A: 'focal' };
+            let result = {};
+            entries = view.getUint16(tiffOffset + subIfdOffset, littleEndian);
+
+            for (let i = 0; i < entries; i++) {
+                let entryOffset = tiffOffset + subIfdOffset + 2 + (i * 12);
+                let tag = view.getUint16(entryOffset, littleEndian);
+                
+                if (targetTags[tag]) {
+                    let type = view.getUint16(entryOffset + 2, littleEndian);
+                    if (type === 3) { // SHORT
+                        result[targetTags[tag]] = view.getUint16(entryOffset + 8, littleEndian);
+                    } else if (type === 5) { // RATIONAL
+                        let valueOffset = view.getUint32(entryOffset + 8, littleEndian);
+                        let num = view.getUint32(tiffOffset + valueOffset, littleEndian);
+                        let den = view.getUint32(tiffOffset + valueOffset + 4, littleEndian);
+                        result[targetTags[tag]] = num / den;
+                    }
+                }
+            }
+            return result;
+        }
+
+        function formatExif(exif) {
+            if (!exif || Object.keys(exif).length === 0) return "EXIF Unavailable";
+            let fNum = exif.aperture ? `ƒ/${exif.aperture.toFixed(1)}` : 'ƒ/--';
+            let shutter = exif.shutter ? `1/${Math.round(1/exif.shutter)}s` : '--s';
+            let iso = exif.iso ? `ISO ${exif.iso}` : 'ISO --';
+            let focal = exif.focal ? `${Math.round(exif.focal)}mm` : '--mm';
+            return `${fNum} • ${shutter} • ${iso} • ${focal}`;
+        }
+        // -----------------------------------
 
         async function init() {
             fetchSystemInfo();
@@ -311,7 +234,6 @@
                 try {
                     const res = await fetch(`/api/files?offset=${offset}&limit=${limit}`);
                     const data = await res.json();
-                    
                     if (data.files && data.files.length > 0) {
                         allFiles = allFiles.concat(data.files);
                         offset += limit;
@@ -319,32 +241,26 @@
                     } else {
                         keepFetching = false;
                     }
-                    
-                    if (allFiles.length >= data.total) {
-                        keepFetching = false;
-                    }
+                    if (allFiles.length >= data.total) keepFetching = false;
                 } catch (e) {
-                    console.error("Error fetching files", e);
                     keepFetching = false;
                 }
             }
             document.getElementById('loading').style.display = 'none';
         }
 
-        // Date Filters
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 currentFilter = e.target.getAttribute('data-filter');
-                displayLimit = displayChunkSize; // Reset pagination on filter change
+                displayLimit = displayChunkSize; 
                 renderGallery();
             });
         });
 
         function getFilteredFiles() {
             if (currentFilter === 'all') return allFiles;
-
             const now = new Date();
             const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             const startOfWeek = startOfToday - (now.getDay() * 24 * 60 * 60 * 1000);
@@ -387,13 +303,7 @@
                 gallery.appendChild(card);
             });
 
-            // Toggle Load More button visibility
-            const loadMoreContainer = document.getElementById('load-more-container');
-            if (filteredFiles.length > displayLimit) {
-                loadMoreContainer.style.display = 'block';
-            } else {
-                loadMoreContainer.style.display = 'none';
-            }
+            document.getElementById('load-more-container').style.display = (filteredFiles.length > displayLimit) ? 'block' : 'none';
         }
 
         function loadMore() {
@@ -401,11 +311,9 @@
             renderGallery();
         }
 
-        // Dedicated Checkbox Toggle Logic
         function toggleSelection(event, fileName) {
-            event.stopPropagation(); // Prevents click from bubbling to the card
+            event.stopPropagation(); 
             const cardElement = event.target.parentElement;
-            
             if (selectedFiles.has(fileName)) {
                 selectedFiles.delete(fileName);
                 cardElement.classList.remove('selected');
@@ -420,22 +328,18 @@
             const btn = document.getElementById('download-btn');
             const countStr = document.getElementById('selection-count');
             const count = selectedFiles.size;
-            
             countStr.innerText = `${count} selected`;
             btn.disabled = count === 0;
             btn.innerText = count > 0 ? `Download ${count} Files` : `Download Selected`;
         }
 
-        // Lightbox Logic
-        function openLightbox(fileName) {
-            // Find the full file object from our array
+        async function openLightbox(fileName) {
             currentlyViewingFile = allFiles.find(f => f.name === fileName);
             if (!currentlyViewingFile) return;
 
             const lightbox = document.getElementById('lightbox');
             const img = document.getElementById('lightbox-img');
             
-            // Populate the Info Bar
             const sizeMB = (currentlyViewingFile.size / (1024 * 1024)).toFixed(1);
             const dateObj = new Date(currentlyViewingFile.date);
             const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -443,19 +347,38 @@
             document.getElementById('lb-name').innerText = currentlyViewingFile.name;
             document.getElementById('lb-size').innerText = `${sizeMB} MB`;
             document.getElementById('lb-date').innerText = dateStr;
+            document.getElementById('lb-exif').innerText = "Reading Metadata...";
             
-            // Blur-up image load
+            // Start with blurry thumbnail instantly
             img.src = `/thumb/${currentlyViewingFile.name}`;
             img.style.filter = "blur(10px)"; 
             lightbox.style.display = 'flex';
 
-            const fullResImage = new Image();
-            fullResImage.src = `/full/${currentlyViewingFile.name}`;
-            fullResImage.onload = () => {
-                img.src = fullResImage.src;
+            const fullResUrl = `/full/${currentlyViewingFile.name}`;
+
+            try {
+                // Fetch the full file as a Blob once to save bandwidth
+                const res = await fetch(fullResUrl);
+                const blob = await res.blob();
+                
+                // 1. Display the high-res image
+                img.src = URL.createObjectURL(blob);
                 img.style.filter = "blur(0px)";
                 img.style.transition = "filter 0.3s ease";
-            };
+
+                // 2. Parse EXIF from the exact same Blob locally
+                if (fileName.toLowerCase().endsWith('.jpg')) {
+                    const buffer = await blob.arrayBuffer();
+                    const view = new DataView(buffer);
+                    const exifData = parseExif(view);
+                    document.getElementById('lb-exif').innerText = formatExif(exifData);
+                } else {
+                    document.getElementById('lb-exif').innerText = "Video File";
+                }
+            } catch (err) {
+                console.error("Image load error:", err);
+                document.getElementById('lb-exif').innerText = "Read Error";
+            }
         }
 
         function closeLightbox() {
@@ -464,9 +387,7 @@
         }
 
         function downloadLightboxImage() {
-            if (currentlyViewingFile) {
-                triggerDownload(currentlyViewingFile.name);
-            }
+            if (currentlyViewingFile) triggerDownload(currentlyViewingFile.name);
         }
 
         document.getElementById('download-btn').addEventListener('click', async () => {

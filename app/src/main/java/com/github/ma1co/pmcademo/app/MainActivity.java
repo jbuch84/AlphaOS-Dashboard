@@ -10,23 +10,12 @@ import android.widget.TextView;
 import android.graphics.Color;
 
 public class MainActivity extends BaseActivity {
-    // 1. Make the server an unkillable background Singleton
-    private static HttpServer server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 2. Start Server ONCE. It binds to whatever IP the camera eventually gets.
-        if (server == null) {
-            try {
-                // Using getApplicationContext() prevents memory leaks
-                server = new HttpServer(getApplicationContext());
-                server.start();
-            } catch (Exception e) {}
-        }
-
-        // 3. Build the UI Menu
+        // Build the UI Menu Programmatically
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setGravity(Gravity.CENTER);
@@ -36,7 +25,7 @@ public class MainActivity extends BaseActivity {
         statusText.setTextSize(20);
         statusText.setTextColor(Color.WHITE);
         statusText.setGravity(Gravity.CENTER);
-        statusText.setText("Alpha OS Dashboard\nBackground Server: RUNNING");
+        statusText.setText("Alpha OS Dashboard\nReady to Connect");
         statusText.setPadding(0, 0, 0, 40);
 
         Button btnHome = new Button(this);
@@ -44,7 +33,7 @@ public class MainActivity extends BaseActivity {
         btnHome.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Hands off to PMCA's native Sony Wi-Fi connector
+                // Let PMCA's native code handle the network AND the server
                 Intent intent = new Intent(MainActivity.this, WifiActivity.class);
                 startActivity(intent);
             }
@@ -55,7 +44,7 @@ public class MainActivity extends BaseActivity {
         btnHotspot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Hands off to PMCA's native Sony Hotspot creator
+                // Let PMCA's native code handle the hotspot AND the server
                 Intent intent = new Intent(MainActivity.this, WifiDirectActivity.class);
                 startActivity(intent);
             }
@@ -67,7 +56,4 @@ public class MainActivity extends BaseActivity {
 
         setContentView(layout);
     }
-    
-    // 4. CRITICAL FIX: We completely removed onDestroy().
-    // The server will no longer commit suicide when you change screens!
 }

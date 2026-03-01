@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Alpha OS Dashboard</title>
     <style>
         /* Sony Alpha Theme */
@@ -74,16 +74,21 @@
 
         /* Lightbox & EXIF Telemetry */
         #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
-        #lightbox-img { max-width: 90%; max-height: 70vh; border-radius: 4px; box-shadow: 0 4px 30px rgba(0,0,0,0.8); }
+        
+        /* Transform transition added for smooth rotation */
+        #lightbox-img { max-width: 90%; max-height: 70vh; border-radius: 4px; box-shadow: 0 4px 30px rgba(0,0,0,0.8); transition: transform 0.3s ease, filter 0.3s ease; }
 
         .lightbox-info-bar { margin-top: 15px; text-align: center; color: #ccc; font-size: 14px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 90%; }
         .lightbox-info-bar span { background: #222; padding: 6px 14px; border-radius: 4px; border: 1px solid #333; }
         
         .exif-data { color: var(--accent); font-family: monospace; font-size: 15px; }
 
-        .lightbox-controls { margin-top: 20px; display: flex; gap: 15px; }
-        .close-btn { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; line-height: 1; }
+        .lightbox-controls { margin-top: 20px; display: flex; gap: 15px; z-index: 1001; }
+        
+        /* Safari iOS UI Fix applied here */
+        .close-btn { position: fixed; top: max(20px, env(safe-area-inset-top)); right: max(30px, env(safe-area-inset-right)); color: white; font-size: 40px; cursor: pointer; line-height: 1; z-index: 1001; }
         .close-btn:hover { color: var(--accent); }
+        
         #loading { text-align: center; padding: 40px; color: var(--text-muted); }
     </style>
 </head>
@@ -127,7 +132,8 @@
         </div>
 
         <div class="lightbox-controls">
-            <button class="action-btn" onclick="downloadLightboxImage()">Download Original File</button>
+            <button class="action-btn" onclick="rotatePreview()" style="background: #333;">Rotate 90°</button>
+            <button class="action-btn" onclick="downloadLightboxImage()">Download Image</button>
         </div>
     </div>
 
@@ -138,6 +144,9 @@
         let currentlyViewingFile = null;
         let displayLimit = 50; 
         const displayChunkSize = 50;
+        
+        // --- NEW STATE VARIABLE FOR ROTATION ---
+        let currentRotation = 0;
 
         // --- NATIVE OFFLINE EXIF PARSER ---
         function parseExif(view) {
@@ -333,12 +342,23 @@
             btn.innerText = count > 0 ? `Download ${count} Files` : `Download Selected`;
         }
 
+        // --- BACKGROUND CLICK FIX ADDED HERE ---
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+
         async function openLightbox(fileName) {
             currentlyViewingFile = allFiles.find(f => f.name === fileName);
             if (!currentlyViewingFile) return;
 
             const lightbox = document.getElementById('lightbox');
             const img = document.getElementById('lightbox-img');
+            
+            // Reset rotation state on opening
+            currentRotation = 0;
+            img.style.transform = `rotate(0deg)`;
             
             const sizeMB = (currentlyViewingFile.size / (1024 * 1024)).toFixed(1);
             const dateObj = new Date(currentlyViewingFile.date);
@@ -364,7 +384,6 @@
                 // 1. Display the high-res image
                 img.src = URL.createObjectURL(blob);
                 img.style.filter = "blur(0px)";
-                img.style.transition = "filter 0.3s ease";
 
                 // 2. Parse EXIF from the exact same Blob locally
                 if (fileName.toLowerCase().endsWith('.jpg')) {
@@ -381,13 +400,53 @@
             }
         }
 
+        // --- NEW ROTATION FUNCTION ---
+        function rotatePreview() {
+            currentRotation = (currentRotation + 90) % 360;
+            document.getElementById('lightbox-img').style.transform = `rotate(${currentRotation}deg)`;
+        }
+
         function closeLightbox() {
             document.getElementById('lightbox').style.display = 'none';
             currentlyViewingFile = null;
+            currentRotation = 0;
+            document.getElementById('lightbox-img').style.transform = `rotate(0deg)`;
         }
 
+        // --- CANVAS DOWNLOAD LOGIC INTEGRATION ---
         function downloadLightboxImage() {
-            if (currentlyViewingFile) triggerDownload(currentlyViewingFile.name);
+            if (!currentlyViewingFile) return;
+            
+            if (currentRotation === 0) {
+                // Normal download if no rotation applied
+                triggerDownload(currentlyViewingFile.name);
+                return;
+            }
+
+            // Create canvas for rotated download
+            const img = document.getElementById('lightbox-img');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            if (currentRotation === 90 || currentRotation === 270) {
+                canvas.width = img.naturalHeight;
+                canvas.height = img.naturalWidth;
+            } else {
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+            }
+
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(currentRotation * Math.PI / 180);
+            ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+
+            const rotatedUrl = canvas.toDataURL('image/jpeg', 1.0);
+            const link = document.createElement('a');
+            link.href = rotatedUrl;
+            link.download = "Rotated_" + currentlyViewingFile.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         document.getElementById('download-btn').addEventListener('click', async () => {
@@ -408,6 +467,7 @@
             }, 2000);
         });
 
+        // Used by batch download and unrotated single downloads
         function triggerDownload(fileName) {
             const link = document.createElement('a');
             link.href = `/full/${fileName}`;

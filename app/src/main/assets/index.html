@@ -53,14 +53,39 @@
         .filter-btn:hover { color: var(--text-main); }
         .filter-btn.active { background: #333; color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 
+        .toolbar-actions { display: flex; align-items: center; gap: 15px; }
+
         .action-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; }
         .action-btn:hover:not(:disabled) { background: #e04600; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255, 80, 0, 0.3); }
         .action-btn:active:not(:disabled) { transform: translateY(1px); }
         .action-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
 
+        /* Mobile Layout Fix */
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+                padding: 15px;
+            }
+            .filter-group {
+                overflow-x: auto;
+                white-space: nowrap;
+                justify-content: flex-start;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .filter-btn {
+                flex: 0 0 auto; /* Prevent buttons from squishing */
+            }
+            .toolbar-actions {
+                justify-content: space-between;
+                width: 100%;
+            }
+        }
+
         .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 25px; }
         
-        /* Smooth Fade-in Animation for Cards */
         .photo-card { background: var(--bg-panel); border-radius: 12px; overflow: hidden; position: relative; border: 2px solid transparent; transition: all 0.3s ease; animation: fadeInUp 0.4s ease forwards; opacity: 0; transform: translateY(15px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
         
@@ -89,14 +114,10 @@
         #lightbox-img { max-width: 90%; max-height: 65vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.3s ease; }
 
         .lightbox-info-bar { margin-top: 20px; text-align: center; color: #ddd; font-size: 13px; font-weight: 500; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 90%; z-index: 1001; }
-        
-        /* Modern Pill Badges for metadata */
         .lightbox-info-bar span { background: rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(4px); }
         .exif-data { color: var(--accent) !important; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; background: rgba(255, 80, 0, 0.1) !important; border-color: rgba(255, 80, 0, 0.3) !important; }
 
         .lightbox-controls { margin-top: 20px; display: flex; gap: 15px; z-index: 1001; }
-        
-        /* Safari iOS UI Fix */
         .close-btn { position: fixed; top: max(20px, env(safe-area-inset-top)); right: max(30px, env(safe-area-inset-right)); color: white; font-size: 40px; background: rgba(0,0,0,0.4); width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 1001; transition: background 0.2s; backdrop-filter: blur(4px); }
         .close-btn:hover { background: var(--accent); }
         
@@ -104,7 +125,6 @@
         .spinner { width: 30px; height: 30px; border: 3px solid #333; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Modern Toast Notifications */
         #toast-container { position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); right: max(20px, env(safe-area-inset-right)); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast { background: var(--bg-panel); color: white; padding: 14px 20px; border-radius: 10px; border-left: 4px solid var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-size: 14px; font-weight: 500; animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; display: flex; align-items: center; gap: 10px; }
         @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -125,8 +145,8 @@
             <button class="filter-btn" data-filter="month">This Month</button>
             <button class="filter-btn" data-filter="year">This Year</button>
         </div>
-        <div>
-            <span id="selection-count" style="margin-right: 15px; color: var(--text-muted); font-weight: 500; font-size: 14px;">0 selected</span>
+        <div class="toolbar-actions">
+            <span id="selection-count" style="color: var(--text-muted); font-weight: 500; font-size: 14px;">0 selected</span>
             <button class="action-btn" id="download-btn" disabled>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 Download Selected
@@ -179,6 +199,36 @@
         const displayChunkSize = 50;
         let currentRotation = 0;
 
+        // --- BULLETPROOF DATE PARSER (FIXED FOR STRINGIFIED NUMBERS) ---
+        function getFileTimestamp(dateInput) {
+            if (!dateInput) return 0;
+            
+            // 1. Immediately catch actual numbers OR stringified numbers like "1709280000000"
+            if (!isNaN(dateInput)) return Number(dateInput);
+            
+            // 2. Fallback for actual date string formats
+            let dStr = String(dateInput).trim();
+            dStr = dStr.replace(/\s+/g, 'T'); // Force Safari compatibility
+            dStr = dStr.replace(/Z/g, '');    // Prevent arbitrary timezone offsets
+            
+            const parsed = new Date(dStr).getTime();
+            if (!isNaN(parsed)) return parsed;
+
+            // 3. Last resort for weird YYYY:MM:DD EXIF strings
+            const match = dStr.match(/(\d{4})[^\d]?(\d{2})[^\d]?(\d{2})[^\d]?(\d{2})?[^\d]?(\d{2})?[^\d]?(\d{2})?/);
+            if (match) {
+                return new Date(
+                    parseInt(match[1], 10), 
+                    parseInt(match[2], 10) - 1, 
+                    parseInt(match[3], 10), 
+                    parseInt(match[4] || 0, 10), 
+                    parseInt(match[5] || 0, 10), 
+                    parseInt(match[6] || 0, 10)
+                ).getTime();
+            }
+            return 0;
+        }
+
         // --- TOAST NOTIFICATION SYSTEM ---
         function showToast(message) {
             const container = document.getElementById('toast-container');
@@ -195,7 +245,6 @@
             }, 3000);
         }
 
-        // --- NATIVE OFFLINE EXIF PARSER ---
         function parseExif(view) {
             if (view.getUint16(0, false) !== 0xFFD8) return null; 
             let offset = 2;
@@ -205,9 +254,7 @@
             while (offset < length) {
                 if (view.getUint8(offset) !== 0xFF) break;
                 marker = view.getUint8(offset + 1);
-                if (marker === 0xE1) { 
-                    return extractTags(view, offset + 4);
-                }
+                if (marker === 0xE1) return extractTags(view, offset + 4);
                 offset += 2 + view.getUint16(offset + 2, false);
             }
             return null;
@@ -313,7 +360,7 @@
             });
         });
 
-        // --- FILTER BUG FIX APPLIED HERE ---
+        // --- FILTER BUG FIX (Utilizes Safe getFileTimestamp) ---
         function getFilteredFiles() {
             if (currentFilter === 'all') return allFiles;
             const now = new Date();
@@ -323,9 +370,8 @@
             const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
 
             return allFiles.filter(file => {
-                // Ensure date is treated as a number timestamp before comparing
-                const fileTime = new Date(file.date).getTime();
-                if (isNaN(fileTime)) return true; // Failsafe
+                const fileTime = getFileTimestamp(file.date);
+                if (!fileTime) return false; 
 
                 switch(currentFilter) {
                     case 'today': return fileTime >= startOfToday;
@@ -343,7 +389,6 @@
             
             const filteredFiles = getFilteredFiles();
             
-            // --- EMPTY STATE UI ---
             if (filteredFiles.length === 0) {
                 gallery.innerHTML = `
                     <div class="empty-state">
@@ -364,7 +409,6 @@
                 
                 const card = document.createElement('div');
                 card.className = `photo-card ${isSelected ? 'selected' : ''}`;
-                // Staggered animation delay for premium feel
                 card.style.animationDelay = `${(index % 20) * 0.03}s`;
                 
                 card.innerHTML = `
@@ -408,11 +452,8 @@
             btn.innerHTML = count > 0 ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download (${count})` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download Selected`;
         }
 
-        // --- BACKGROUND CLICK FIX ---
         document.getElementById('lightbox').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeLightbox();
-            }
+            if (e.target === this) closeLightbox();
         });
 
         async function openLightbox(fileName) {
@@ -426,8 +467,10 @@
             img.style.transform = `rotate(0deg)`;
             
             const sizeMB = (currentlyViewingFile.size / (1024 * 1024)).toFixed(1);
-            const dateObj = new Date(currentlyViewingFile.date);
-            const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Lightbox also updated to use the safe timestamp function
+            const fileTime = getFileTimestamp(currentlyViewingFile.date);
+            const dateStr = fileTime ? new Date(fileTime).toLocaleDateString() + ' ' + new Date(fileTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Unknown Date';
             
             document.getElementById('lb-name').innerText = currentlyViewingFile.name;
             document.getElementById('lb-size').innerText = `${sizeMB} MB`;
@@ -483,7 +526,6 @@
                 return;
             }
 
-            // Canvas export for rotated images
             const img = document.getElementById('lightbox-img');
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');

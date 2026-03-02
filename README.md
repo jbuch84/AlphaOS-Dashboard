@@ -24,7 +24,7 @@ This app supports Sony cameras compatible with the PMCA framework (Android 2.3.7
 1. **Prerequisites:**
    * Download the [pmca-gui installer](https://github.com/ma1co/Sony-PMCA-RE/releases) by ma1co. This is the tool required to flash custom APKs onto Sony hardware.
 
-2. **Download the APK:** * Go to the [Releases](../../releases) page of this repository and download the latest `AlphaOS-Dashboard-v1.X.apk`.
+2. **Download the APK:** * Go to the [Releases](../../releases) page of this repository and download the latest `AlphaOS-Dashboard-vX.X.apk`.
 
 3. **Install to Camera:**
    * Connect your camera to your computer via USB (ensure it is in **MTP** or **Mass Storage** mode).

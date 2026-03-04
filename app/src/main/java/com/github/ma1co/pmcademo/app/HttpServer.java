@@ -1,10 +1,13 @@
 package com.github.ma1co.pmcademo.app;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
 import android.os.Environment;
 import android.os.StatFs;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -68,32 +71,49 @@ public class HttpServer extends NanoHTTPD {
                 return newFixedLengthResponse(Status.OK, "application/json", json.toString());
             }
 
-            // Fixed: Thumbnails and Full-res now use URI parameters to prevent folder collisions
-            if (uri.startsWith("/thumb/") || uri.startsWith("/full/")) {
+            if (uri.startsWith("/thumb/")) {
                 Map<String, String> params = session.getParms();
-                String folder = params.get("folder"); // "DCIM" or "GRADED"
+                String folder = params.get("folder");
                 String name = params.get("name");
-                
-                File folderPath = (folder != null && folder.equals("GRADED")) 
-                                  ? new File(root, "GRADED") 
-                                  : new File(root, "DCIM/100MSDCF");
-                File file = new File(folderPath, name);
+                File file = new File(root, (folder.equals("GRADED") ? "GRADED" : "DCIM/100MSDCF") + "/" + name);
 
                 if (file.exists()) {
-                    if (uri.startsWith("/thumb/") && folder.equals("DCIM")) {
+                    // Try fast EXIF thumb for DCIM folder
+                    if (folder.equals("DCIM")) {
                         try {
                             ExifInterface exif = new ExifInterface(file.getAbsolutePath());
                             byte[] thumb = exif.getThumbnail();
                             if (thumb != null) return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(thumb), thumb.length);
                         } catch (Exception e) {}
                     }
-                    // Default to full image if no thumb exists (GRADED mode)
+                    
+                    // MEMORY SAFE DOWNSCALE FOR GRADED FOLDER (Prevents Crashing)
+                    BitmapFactory.Options opts = new BitmapFactory.Options();
+                    opts.inSampleSize = 8; // Load at 1/8th size
+                    Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath(), opts);
+                    if (bm != null) {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        bm.compress(Bitmap.CompressFormat.JPEG, 60, baos);
+                        byte[] data = baos.toByteArray();
+                        bm.recycle(); // PHYSICALLY FREE MEMORY IMMEDIATELY
+                        return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(data), data.length);
+                    }
+                }
+            }
+
+            if (uri.startsWith("/full/")) {
+                Map<String, String> params = session.getParms();
+                String folder = params.get("folder");
+                String name = params.get("name");
+                File file = new File(root, (folder.equals("GRADED") ? "GRADED" : "DCIM/100MSDCF") + "/" + name);
+
+                if (file.exists()) {
                     return newFixedLengthResponse(Status.OK, "image/jpeg", new FileInputStream(file), file.length());
                 }
             }
 
         } catch (Exception e) {
-            return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Error: " + e.getMessage());
+            return newFixedLengthResponse(Status.INTERNAL_ERROR, "text/plain", "Server Error");
         }
         return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "404");
     }

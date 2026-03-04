@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.ExifInterface;
 import android.os.Environment;
 import android.os.StatFs;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,7 +13,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Response;
@@ -24,11 +22,14 @@ public class HttpServer extends NanoHTTPD {
     public static final int PORT = 8080;
     private Context context;
     private File dcimDir;
+    private File gradedDir; // Added for Graded recipes
 
     public HttpServer(Context context) {
         super(PORT);
         this.context = context;
-        this.dcimDir = new File(Environment.getExternalStorageDirectory(), "DCIM");
+        File root = Environment.getExternalStorageDirectory();
+        this.dcimDir = new File(root, "DCIM");
+        this.gradedDir = new File(root, "GRADED");
     }
 
     @Override
@@ -36,13 +37,11 @@ public class HttpServer extends NanoHTTPD {
         String uri = session.getUri();
 
         try {
-            // Serve the Alpha OS Dashboard
             if (uri.equals("/")) {
                 InputStream is = context.getAssets().open("index.html");
                 return newChunkedResponse(Status.OK, "text/html", is);
             }
 
-            // Hardware Telemetry
             if (uri.equals("/api/system")) {
                 StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
                 long bytesAvailable = (long)stat.getBlockSize() * (long)stat.getAvailableBlocks();
@@ -51,15 +50,24 @@ public class HttpServer extends NanoHTTPD {
                 return newFixedLengthResponse(Status.OK, "application/json", json);
             }
 
-            // Paginated files + Date metadata
             if (uri.startsWith("/api/files")) {
                 Map<String, String> params = session.getParms();
                 int offset = params.containsKey("offset") ? Integer.parseInt(params.get("offset")) : 0;
                 int limit = params.containsKey("limit") ? Integer.parseInt(params.get("limit")) : 50;
 
-                List<File> allFiles = getMediaFiles(dcimDir);
-                int total = allFiles.size();
+                // Combined list from both directories
+                List<File> allFiles = new ArrayList<File>();
+                allFiles.addAll(getMediaFiles(dcimDir));
+                allFiles.addAll(getMediaFiles(gradedDir));
                 
+                // Sort combined list by date (newest first)
+                Collections.sort(allFiles, new Comparator<File>() {
+                    public int compare(File f1, File f2) {
+                        return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
+                    }
+                });
+
+                int total = allFiles.size();
                 int end = Math.min(offset + limit, total);
                 List<File> pageFiles = offset < total ? allFiles.subList(offset, end) : new ArrayList<File>();
 
@@ -67,7 +75,11 @@ public class HttpServer extends NanoHTTPD {
                 json.append("{\"total\": ").append(total).append(", \"files\": [");
                 for (int i = 0; i < pageFiles.size(); i++) {
                     File f = pageFiles.get(i);
+                    // Determine which folder it belongs to for the UI badge
+                    String folderLabel = f.getAbsolutePath().contains("/GRADED/") ? "GRADED" : "DCIM";
+                    
                     json.append("{\"name\":\"").append(f.getName())
+                        .append("\", \"folder\":\"").append(folderLabel)
                         .append("\", \"date\":").append(f.lastModified())
                         .append(", \"size\":").append(f.length()).append("}");
                     if (i < pageFiles.size() - 1) json.append(",");
@@ -76,10 +88,12 @@ public class HttpServer extends NanoHTTPD {
                 return newFixedLengthResponse(Status.OK, "application/json", json.toString());
             }
 
-            // Instant EXIF Thumbnails
             if (uri.startsWith("/thumb/")) {
                 String fileName = uri.substring(7);
-                File file = findFile(dcimDir, fileName);
+                // Search both directories
+                File file = findFile(gradedDir, fileName);
+                if (file == null) file = findFile(dcimDir, fileName);
+
                 if (file != null && file.exists()) {
                     try {
                         ExifInterface exif = new ExifInterface(file.getAbsolutePath());
@@ -89,13 +103,15 @@ public class HttpServer extends NanoHTTPD {
                         }
                     } catch (Exception e) {}
                 }
-                return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "No thumbnail found");
+                return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "No thumbnail");
             }
 
-            // Full Resolution Media
             if (uri.startsWith("/full/")) {
                 String fileName = uri.substring(6);
-                File file = findFile(dcimDir, fileName);
+                // Search both directories
+                File file = findFile(gradedDir, fileName);
+                if (file == null) file = findFile(dcimDir, fileName);
+
                 if (file != null && file.exists()) {
                     FileInputStream fis = new FileInputStream(file);
                     String mime = fileName.toLowerCase().endsWith(".mp4") ? "video/mp4" : "image/jpeg";
@@ -112,6 +128,8 @@ public class HttpServer extends NanoHTTPD {
 
     private List<File> getMediaFiles(File dir) {
         List<File> result = new ArrayList<File>();
+        if (!dir.exists()) return result;
+
         File[] files = dir.listFiles();
         if (files != null) {
             for (File f : files) {
@@ -125,15 +143,11 @@ public class HttpServer extends NanoHTTPD {
                 }
             }
         }
-        Collections.sort(result, new Comparator<File>() {
-            public int compare(File f1, File f2) {
-                return Long.valueOf(f2.lastModified()).compareTo(f1.lastModified());
-            }
-        });
         return result;
     }
 
     private File findFile(File dir, String fileName) {
+        if (!dir.exists()) return null;
         File[] files = dir.listFiles();
         if (files != null) {
             for (File f : files) {

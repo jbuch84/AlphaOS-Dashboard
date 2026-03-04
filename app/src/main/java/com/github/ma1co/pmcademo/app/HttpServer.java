@@ -85,14 +85,16 @@ public class HttpServer extends NanoHTTPD {
                             if (thumb != null) return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(thumb), thumb.length);
                         } catch (Exception e) {}
                     }
+                    
                     BitmapFactory.Options opts = new BitmapFactory.Options();
                     opts.inSampleSize = 8;
+                    opts.inPurgeable = true; // Extra OOM protection
                     Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath(), opts);
                     if (bm != null) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         bm.compress(Bitmap.CompressFormat.JPEG, 60, baos);
                         byte[] data = baos.toByteArray();
-                        bm.recycle(); 
+                        bm.recycle(); // PHYSICALLY DUMP FROM RAM
                         return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(data), data.length);
                     }
                 }
@@ -103,10 +105,7 @@ public class HttpServer extends NanoHTTPD {
                 String folder = params.get("folder");
                 String name = params.get("name");
                 File file = new File(root, (folder.equals("GRADED") ? "GRADED" : "DCIM/100MSDCF") + "/" + name);
-
-                if (file.exists()) {
-                    return newFixedLengthResponse(Status.OK, "image/jpeg", new FileInputStream(file), file.length());
-                }
+                if (file.exists()) return newFixedLengthResponse(Status.OK, "image/jpeg", new FileInputStream(file), file.length());
             }
 
         } catch (Exception e) {

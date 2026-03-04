@@ -78,7 +78,6 @@ public class HttpServer extends NanoHTTPD {
                 File file = new File(root, (folder.equals("GRADED") ? "GRADED" : "DCIM/100MSDCF") + "/" + name);
 
                 if (file.exists()) {
-                    // Try fast EXIF thumb for DCIM folder
                     if (folder.equals("DCIM")) {
                         try {
                             ExifInterface exif = new ExifInterface(file.getAbsolutePath());
@@ -86,16 +85,14 @@ public class HttpServer extends NanoHTTPD {
                             if (thumb != null) return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(thumb), thumb.length);
                         } catch (Exception e) {}
                     }
-                    
-                    // MEMORY SAFE DOWNSCALE FOR GRADED FOLDER (Prevents Crashing)
                     BitmapFactory.Options opts = new BitmapFactory.Options();
-                    opts.inSampleSize = 8; // Load at 1/8th size
+                    opts.inSampleSize = 8;
                     Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath(), opts);
                     if (bm != null) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         bm.compress(Bitmap.CompressFormat.JPEG, 60, baos);
                         byte[] data = baos.toByteArray();
-                        bm.recycle(); // PHYSICALLY FREE MEMORY IMMEDIATELY
+                        bm.recycle(); 
                         return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(data), data.length);
                     }
                 }

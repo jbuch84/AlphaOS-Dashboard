@@ -6,19 +6,17 @@
     <title>Alpha OS Dashboard</title>
     <style>
         :root { --bg-dark: #0a0a0a; --bg-panel: #1a1a1a; --accent: #ff5000; --text-main: #ffffff; --text-muted: #888888; }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding-bottom: 40px; }
-        header { background-color: var(--bg-panel); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a2a2a; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background-color: var(--bg-dark); color: var(--text-main); padding-bottom: 40px; }
+        header { background-color: var(--bg-panel); padding: 15px 25px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center; }
         .sys-info { font-size: 12px; color: var(--accent); font-weight: bold; background: rgba(255,80,0,0.1); padding: 5px 10px; border-radius: 15px; }
         .toolbar { position: sticky; top: 0; background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px); padding: 10px 20px; z-index: 100; border-bottom: 1px solid #222; }
         .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .btn-group { display: flex; gap: 5px; background: #111; padding: 4px; border-radius: 8px; border: 1px solid #333; }
         .btn { background: none; border: none; color: #888; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.2s; }
-        
-        /* THEME MATCHING ORANGE HIGHLIGHT */
         .btn.active { background: var(--accent); color: white; box-shadow: 0 0 15px rgba(255,80,0,0.3); }
-        
-        .action-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .action-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .action-btn:disabled { background: #222; color: #444; }
+        .secondary-btn { background: #222; border: 1px solid #444; color: #aaa; margin-right: 10px; }
         .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 20px; }
         .card { background: var(--bg-panel); border-radius: 10px; overflow: hidden; position: relative; border: 2px solid transparent; transition: 0.2s; }
         .card.selected { border-color: var(--accent); }
@@ -28,16 +26,15 @@
         .sel-indicator { position: absolute; top: 10px; left: 10px; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.5); border-radius: 5px; background: rgba(0,0,0,0.4); pointer-events: none; }
         .card.selected .sel-indicator { background: var(--accent); border-color: var(--accent); }
         .card.selected .sel-indicator::after { content: '✓'; color: white; font-size: 12px; position: absolute; left: 4px; top: 0px; font-weight: bold; }
-        
         #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; cursor: zoom-out; }
-        #lightbox img { max-width: 85%; max-height: 70vh; border-radius: 4px; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: default; }
-        .lb-tools { margin-top: 25px; display: flex; gap: 15px; background: #111; padding: 15px; border-radius: 12px; border: 1px solid #333; cursor: default; }
+        #lightbox img { max-width: 85%; max-height: 65vh; border-radius: 4px; transition: transform 0.4s; cursor: default; }
+        .lb-tools { margin-top: 20px; display: flex; gap: 15px; background: #111; padding: 15px; border-radius: 12px; border: 1px solid #333; cursor: default; }
     </style>
 </head>
 <body>
 
     <header>
-        <h3 style="margin:0; letter-spacing:1px;">ALPHA OS DASHBOARD</h3>
+        <h3 style="margin:0">ALPHA OS DASHBOARD</h3>
         <div class="sys-info" id="sys-info">CONNECTING...</div>
     </header>
 
@@ -54,7 +51,10 @@
         </div>
         <div class="row">
             <span id="sel-count" style="font-size:12px; color:var(--text-muted)">0 selected</span>
-            <button class="action-btn" id="dl-btn" disabled onclick="downloadSelected()">Download Selected</button>
+            <div>
+                <button class="action-btn secondary-btn" id="unsel-btn" style="display:none" onclick="unselectAll()">Unselect All</button>
+                <button class="action-btn" id="dl-btn" disabled onclick="downloadSelected()">Download Selected</button>
+            </div>
         </div>
     </div>
 
@@ -62,7 +62,7 @@
 
     <div id="lightbox" onclick="closeLightbox()">
         <img id="lb-img" src="" onclick="event.stopPropagation()">
-        <div id="lb-exif" style="margin-top:15px; color:var(--accent); font-family:monospace; font-weight:bold;"></div>
+        <div id="lb-exif" style="margin-top:15px; color:var(--accent); font-family:monospace; font-weight:bold; text-align:center; max-width:90%"></div>
         <div class="lb-tools" onclick="event.stopPropagation()">
             <button class="action-btn" style="background:#222; border:1px solid #444;" onclick="rotatePreview()">ROTATE</button>
             <button class="action-btn" onclick="downloadCurrent()">SAVE IMAGE</button>
@@ -89,8 +89,7 @@
         async function loadFiles() {
             if (abortController) abortController.abort();
             abortController = new AbortController();
-            document.getElementById('gallery').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:100px; color:#555;">Handshaking with SD Card...</div>';
-            
+            document.getElementById('gallery').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:100px; color:#555;">Handshaking...</div>';
             try {
                 const res = await fetch(`/api/files?folder=${mode}`, { signal: abortController.signal });
                 const data = await res.json();
@@ -128,10 +127,7 @@
                     <div class="checkbox-hitbox" onclick="toggleSel(event, '${f.name}')"></div>
                     <div class="sel-indicator"></div>
                     <img src="/thumb/?folder=${mode}&name=${f.name}" onclick="openLightbox('${f.name}')">
-                    <div class="card-info">
-                        <span>${f.name}</span>
-                        <span>${(f.size/1024/1024).toFixed(1)}MB</span>
-                    </div>
+                    <div class="card-info"><span>${f.name}</span><span>${(f.size/1024/1024).toFixed(1)}MB</span></div>
                 `;
                 container.appendChild(card);
             });
@@ -145,9 +141,12 @@
             render();
         }
 
+        function unselectAll() { selected.clear(); render(); }
+
         function updateUI() {
             document.getElementById('sel-count').innerText = `${selected.size} selected`;
             document.getElementById('dl-btn').disabled = selected.size === 0;
+            document.getElementById('unsel-btn').style.display = selected.size > 0 ? 'inline-flex' : 'none';
         }
 
         function openLightbox(name) {
@@ -157,30 +156,39 @@
             const img = document.getElementById('lb-img');
             img.src = `/full/?folder=${mode}&name=${name}`;
             img.style.transform = `rotate(0deg) scale(1)`;
-            document.getElementById('lb-exif').innerText = "LOADING METADATA...";
+            document.getElementById('lb-exif').innerText = "PARSING EXIF...";
             
-            // EXIF Parser Logic
             if(mode === 'DCIM') {
-                fetch(`/full/?folder=${mode}&name=${name}`).then(r => r.blob()).then(blob => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const view = new DataView(e.target.result);
-                        // Simplified metadata logic for webview
-                        document.getElementById('lb-exif').innerText = "SONY ALPHA • ORIGINAL DATA";
-                    };
-                    reader.readAsArrayBuffer(blob.slice(0, 65536));
-                });
+                parseMetadata(`/full/?folder=${mode}&name=${name}`);
             } else {
-                document.getElementById('lb-exif').innerText = "FILM OS GRADED RECIPE";
+                document.getElementById('lb-exif').innerText = "FILM OS RECIPE • NO METADATA";
             }
             lb.style.display = 'flex';
+        }
+
+        async function parseMetadata(url) {
+            try {
+                const response = await fetch(url, { headers: { 'Range': 'bytes=0-65536' } });
+                const buffer = await response.arrayBuffer();
+                const view = new DataView(buffer);
+                
+                // Extremely basic Sony EXIF offset finder
+                let info = "SONY ALPHA • DATA PRESERVED";
+                let iso = "", aperture = "", shutter = "";
+
+                // Look for common EXIF tags (Heuristic approach for the dashboard)
+                for (let i = 0; i < buffer.byteLength - 4; i++) {
+                    if (view.getUint16(i) === 0x8827) iso = "ISO " + view.getUint16(i+8); 
+                }
+                document.getElementById('lb-exif').innerText = iso ? `ORIGINAL DATA • ${iso}` : "SONY ALPHA • JPG DATA";
+            } catch (e) { document.getElementById('lb-exif').innerText = "METADATA READ ERROR"; }
         }
 
         function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
 
         function rotatePreview() {
             rotation = (rotation + 90) % 360;
-            const scale = (rotation === 90 || rotation === 270) ? 0.7 : 1;
+            const scale = (rotation === 90 || rotation === 270) ? 0.65 : 1;
             document.getElementById('lb-img').style.transform = `rotate(${rotation}deg) scale(${scale})`;
         }
 

@@ -5,7 +5,7 @@ A modern, lightning-fast web dashboard and file server for Sony Alpha cameras.
 
 Built on the PlayMemories Camera Apps (PMCA) OpenMemories framework, this app bypasses Sony's legacy restrictions to serve your photos directly to your phone or computer over local Wi-Fi. It features a responsive, dark-mode web UI, true binary EXIF extraction, and batch downloading—all processed securely offline.
 
-> **🤝 Companion App Notice:** This dashboard is designed to work hand-in-hand with [**JPG Cookbook (Film OS)**](https://github.com/jbuch84/sony-jpgcookbook), our in-camera 3D LUT grading engine. Future updates plan to fully merge these two applications into a single, unified Alpha operating system.
+> **🤝 Companion App Notice:** This dashboard is designed to work hand-in-hand with [**JPG Cookbook (Film OS)**](https://github.com/jbuch84/sony-jpgcookbook), an in-camera 3D LUT grading engine. Future updates plan to fully merge these two applications into a single, unified Alpha operating system.
 
 ## ✨ Features
 

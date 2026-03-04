@@ -43,21 +43,18 @@ public class HttpServer extends NanoHTTPD {
                 long bytesAvailable = (long)stat.getBlockSize() * (long)stat.getAvailableBlocks();
                 double gbAvailable = bytesAvailable / (1024.0 * 1024.0 * 1024.0);
                 boolean hasGraded = new File(root, "GRADED").exists();
-                // We send back whether the folder exists so the UI can hide the button
                 String json = String.format("{\"storage_gb\": \"%.1f\", \"has_graded\": %b}", gbAvailable, hasGraded);
                 return newFixedLengthResponse(Status.OK, "application/json", json);
             }
 
             if (uri.startsWith("/api/files")) {
                 Map<String, String> params = session.getParms();
-                String folderParam = params.get("folder"); // "DCIM" or "GRADED"
-                
+                String folderParam = params.get("folder"); 
                 File targetDir = (folderParam != null && folderParam.equals("GRADED")) 
                                  ? new File(root, "GRADED") 
                                  : new File(root, "DCIM/100MSDCF");
 
                 List<File> allFiles = getMediaFiles(targetDir);
-                
                 StringBuilder json = new StringBuilder();
                 json.append("{\"folder\": \"").append(folderParam).append("\", \"files\": [");
                 for (int i = 0; i < allFiles.size(); i++) {
@@ -71,25 +68,26 @@ public class HttpServer extends NanoHTTPD {
                 return newFixedLengthResponse(Status.OK, "application/json", json.toString());
             }
 
-            // Path for DCIM thumbnails (Fast)
-            if (uri.startsWith("/thumb/")) {
-                String fileName = uri.substring(7);
-                File file = new File(root, "DCIM/100MSDCF/" + fileName);
-                if (file.exists()) {
-                    ExifInterface exif = new ExifInterface(file.getAbsolutePath());
-                    byte[] thumb = exif.getThumbnail();
-                    if (thumb != null) return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(thumb), thumb.length);
-                }
-                return newFixedLengthResponse(Status.NOT_FOUND, "text/plain", "No thumb");
-            }
-
-            if (uri.startsWith("/full/")) {
-                String fileName = uri.substring(6);
-                // Try Graded folder first, then DCIM
-                File file = new File(root, "GRADED/" + fileName);
-                if (!file.exists()) file = new File(root, "DCIM/100MSDCF/" + fileName);
+            // Fixed: Thumbnails and Full-res now use URI parameters to prevent folder collisions
+            if (uri.startsWith("/thumb/") || uri.startsWith("/full/")) {
+                Map<String, String> params = session.getParms();
+                String folder = params.get("folder"); // "DCIM" or "GRADED"
+                String name = params.get("name");
+                
+                File folderPath = (folder != null && folder.equals("GRADED")) 
+                                  ? new File(root, "GRADED") 
+                                  : new File(root, "DCIM/100MSDCF");
+                File file = new File(folderPath, name);
 
                 if (file.exists()) {
+                    if (uri.startsWith("/thumb/") && folder.equals("DCIM")) {
+                        try {
+                            ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+                            byte[] thumb = exif.getThumbnail();
+                            if (thumb != null) return newFixedLengthResponse(Status.OK, "image/jpeg", new ByteArrayInputStream(thumb), thumb.length);
+                        } catch (Exception e) {}
+                    }
+                    // Default to full image if no thumb exists (GRADED mode)
                     return newFixedLengthResponse(Status.OK, "image/jpeg", new FileInputStream(file), file.length());
                 }
             }

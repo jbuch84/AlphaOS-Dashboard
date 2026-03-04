@@ -14,24 +14,28 @@
         .btn-group { display: flex; gap: 5px; background: #111; padding: 4px; border-radius: 8px; }
         .btn { background: none; border: none; color: #666; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .btn.active { background: #333; color: var(--accent); }
-        .action-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .action-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .action-btn:disabled { background: #222; color: #444; }
         .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 20px; }
-        .card { background: var(--bg-panel); border-radius: 10px; overflow: hidden; position: relative; border: 2px solid transparent; transition: 0.2s; }
+        .card { background: var(--bg-panel); border-radius: 10px; overflow: hidden; position: relative; border: 2px solid transparent; }
         .card.selected { border-color: var(--accent); }
         .card img { width: 100%; height: 140px; object-fit: cover; cursor: pointer; }
-        .card-info { padding: 10px; font-size: 11px; display: flex; justify-content: space-between; color: #888; }
+        .card-info { padding: 10px; font-size: 11px; display: flex; justify-content: space-between; color: #888; pointer-events: none; }
+        .checkbox-hitbox { position: absolute; top: 0; left: 0; width: 50px; height: 50px; cursor: pointer; z-index: 10; }
         .sel-indicator { position: absolute; top: 8px; left: 8px; width: 18px; height: 18px; border: 2px solid white; border-radius: 4px; background: rgba(0,0,0,0.5); pointer-events: none; }
         .card.selected .sel-indicator { background: var(--accent); border-color: var(--accent); }
+        .card.selected .sel-indicator::after { content: '✓'; color: white; font-size: 12px; position: absolute; left: 3px; top: -1px; font-weight: bold; }
+        
         #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
-        #lightbox img { max-width: 95%; max-height: 80vh; }
-        .close { position: absolute; top: 20px; right: 20px; font-size: 30px; color: white; cursor: pointer; }
+        #lightbox img { max-width: 90%; max-height: 70vh; border-radius: 4px; transition: transform 0.3s; }
+        .close { position: absolute; top: 20px; right: 20px; font-size: 40px; color: white; cursor: pointer; z-index: 1001; }
+        .lb-tools { margin-top: 20px; display: flex; gap: 15px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h3 style="margin:0">ALPHA OS</h3>
+        <h3 style="margin:0">ALPHA OS DASHBOARD</h3>
         <div class="sys-info" id="sys-info">Syncing...</div>
     </header>
 
@@ -48,16 +52,20 @@
         </div>
         <div class="row">
             <span id="sel-count" style="font-size:12px; color:#555">0 selected</span>
-            <button class="action-btn" id="dl-btn" disabled onclick="downloadSelected()">Download</button>
+            <button class="action-btn" id="dl-btn" disabled onclick="downloadSelected()">Download Selected</button>
         </div>
     </div>
 
     <div class="gallery" id="gallery"></div>
 
-    <div id="lightbox" onclick="closeLightbox()">
-        <span class="close">&times;</span>
+    <div id="lightbox">
+        <span class="close" onclick="closeLightbox()">&times;</span>
         <img id="lb-img" src="">
-        <div id="lb-meta" style="margin-top:15px; color:var(--accent); font-family:monospace;"></div>
+        <div id="lb-exif" style="margin-top:15px; color:var(--accent); font-family:monospace; text-align:center;"></div>
+        <div class="lb-tools">
+            <button class="action-btn" style="background:#333" onclick="rotatePreview()">Rotate 90°</button>
+            <button class="action-btn" onclick="downloadCurrent()">Save This Image</button>
+        </div>
     </div>
 
     <script>
@@ -65,6 +73,8 @@
         let selected = new Set();
         let mode = 'DCIM';
         let filter = 'all';
+        let rotation = 0;
+        let viewName = "";
 
         async function init() {
             const res = await fetch('/api/system');
@@ -99,33 +109,30 @@
         function render() {
             const container = document.getElementById('gallery');
             container.innerHTML = '';
-            
             const now = new Date();
             const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-
             const filtered = currentFiles.filter(f => filter === 'all' || f.date >= startOfToday);
 
             filtered.forEach(f => {
                 const card = document.createElement('div');
                 card.className = `card ${selected.has(f.name) ? 'selected' : ''}`;
-                // If in GRADED mode, we load the full image as thumb since there are no thumbnails
-                const thumbSrc = mode === 'GRADED' ? `/full/${f.name}` : `/thumb/${f.name}`;
                 
                 card.innerHTML = `
+                    <div class="checkbox-hitbox" onclick="toggleSel(event, '${f.name}')"></div>
                     <div class="sel-indicator"></div>
-                    <img src="${thumbSrc}" onclick="event.stopPropagation(); openLightbox('${f.name}')">
-                    <div class="card-info" onclick="toggleSel('${f.name}')">
+                    <img src="/thumb/?folder=${mode}&name=${f.name}" onclick="openLightbox('${f.name}')">
+                    <div class="card-info">
                         <span>${f.name}</span>
                         <span>${(f.size/1024/1024).toFixed(1)}MB</span>
                     </div>
                 `;
-                card.onclick = () => toggleSel(f.name);
                 container.appendChild(card);
             });
             updateUI();
         }
 
-        function toggleSel(name) {
+        function toggleSel(event, name) {
+            event.stopPropagation();
             if(selected.has(name)) selected.delete(name);
             else selected.add(name);
             render();
@@ -137,23 +144,38 @@
         }
 
         function openLightbox(name) {
+            viewName = name;
+            rotation = 0;
             const lb = document.getElementById('lightbox');
-            document.getElementById('lb-img').src = `/full/${name}`;
-            document.getElementById('lb-meta').innerText = mode === 'DCIM' ? "Reading Metadata..." : "Recipe (No EXIF)";
+            const img = document.getElementById('lb-img');
+            img.src = `/full/?folder=${mode}&name=${name}`;
+            img.style.transform = `rotate(0deg)`;
+            document.getElementById('lb-exif').innerText = mode === 'DCIM' ? "Original Metadata Preserved" : "Recipe: Graded in Film OS";
             lb.style.display = 'flex';
         }
 
         function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
 
+        function rotatePreview() {
+            rotation = (rotation + 90) % 360;
+            document.getElementById('lb-img').style.transform = `rotate(${rotation}deg)`;
+        }
+
+        function downloadCurrent() { triggerDownload(viewName); }
+
         async function downloadSelected() {
             const list = Array.from(selected);
             for(let name of list) {
-                const link = document.createElement('a');
-                link.href = `/full/${name}`;
-                link.download = name;
-                link.click();
+                triggerDownload(name);
                 await new Promise(r => setTimeout(r, 1000));
             }
+        }
+
+        function triggerDownload(name) {
+            const link = document.createElement('a');
+            link.href = `/full/?folder=${mode}&name=${name}`;
+            link.download = (rotation > 0 ? "Edited_" : "") + name;
+            link.click();
         }
 
         init();
